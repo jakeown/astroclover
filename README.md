@@ -5,13 +5,15 @@ CLOVER is a convolutional neural network (ConvNet) method trained to identify sp
 
 CLOVER has two predictions steps:
 
-1) Classification 
+1) Classification
+
 CLOVER first segments the pixels in an input data cube into one of three classes:
  - Noise (i.e., no emission)
  - One-component (emission line with single velocity component)
  - Two-component (emission line with two velocity components)
 
 2) Velocity Prediction
+
 For the pixels identified as two-components in step 1, a second regression ConvNet is used to predict the following parameters for each velocity component:
  - Centroid Velocity
  - Velocity Dispersion
