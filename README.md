@@ -1,7 +1,7 @@
 # astroclover
 Convnet Line-fitting Of Velocities in Emission-line Regions (CLOVER)
 
-CLOVER is a convolutional neural network (ConvNet) method trained to identify spectra with two velocity components along the line of sight and predict their kinematics.  It works with Gaussian emission lines (e.g., CO) and lines with hyperfine structure (e.g., NH3).  This repository holds both the scripts used to train the ConvNet and those used to test the trained ConvNet's performance or predict on real data cubes. 
+CLOVER is a convolutional neural network (ConvNet) trained to identify spectra with two velocity components along the line of sight and predict their kinematics.  It works with Gaussian emission lines (e.g., CO) and lines with hyperfine structure (e.g., NH3).  This repository holds both the scripts used to train the ConvNet and those used to test the trained ConvNet's performance or predict on real data cubes. 
 
 CLOVER has two prediction steps:
 
