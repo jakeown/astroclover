@@ -10,7 +10,7 @@ CLOVER has two prediction steps:
  - One-component (emission line with single velocity component)
  - Two-component (emission line with two velocity components)
 
-2) Velocity Prediction - For the pixels identified as two-components in step 1, a second regression ConvNet is used to predict the following parameters for each velocity component:
+2) Parameter Prediction - For the pixels identified as two-components in step 1, a second regression ConvNet is used to predict the following parameters for each velocity component:
  - Centroid Velocity
  - Velocity Dispersion
  - Peak Intensity
