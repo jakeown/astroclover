@@ -22,10 +22,10 @@ def get_train_multi(type_name='train'):
 	# One with training data, other with training labels
 
 	print 'Loading Training Data...'
-	with h5py.File('three_class/'+type_name+'_three_class.h5', 'r') as hf:
+	with h5py.File('three_class_gauss_'+type_name+'1.h5', 'r') as hf:
 		X = hf['data'][:]
 	hf.close()
-	with h5py.File('three_class/labels_'+type_name+'_three_class.h5', 'r') as hf:
+	with h5py.File('labels_three_class_gauss_'+type_name+'1.h5', 'r') as hf:
 		y = hf['data'][:]
 	hf.close()
 	return X, y
@@ -82,9 +82,9 @@ def branch_conv1d_mod():
 	b2_flat = Flatten()(b2_conv2)
 	merge1 = concatenate([b1_flat, b2_flat])
 	#dense1 = Dense(1000, activation='relu')(merge1) # tried 3000 
-	dense1 = Dense(512, activation='relu')(merge1) #regular 3class
+	dense1 = Dense(3000, activation='relu')(merge1) #regular 3class
 	#dense2 = Dense(500, activation='relu')(dense1) # tried 3000
-	dense2 = Dense(512, activation='relu')(dense1) #regular 3class
+	dense2 = Dense(3000, activation='relu')(dense1) #regular 3class
 	dense3 = Dense(3, activation='softmax')(dense2)
 	model = Model(inputs=[b1_input, b2_input], outputs=dense3)
 	#model.add(Dense(1000, activation='relu'))
@@ -165,9 +165,9 @@ def conv1d_multi_local():
 	#model.add(Conv1D(16, kernel_size=3, activation='relu', padding='same'))
 	#model.add(MaxPooling1D(pool_size=2))
 	model.add(Flatten())
-	model.add(Dense(512, activation='relu'))
+	model.add(Dense(3000, activation='relu'))
 	#model.add(Dropout(0.25)) # 0.25
-	model.add(Dense(512, activation='relu')) # maybe remove
+	model.add(Dense(3000, activation='relu')) # maybe remove
 	#model.add(Dropout(0.25)) #
 	#model.add(Dense(64, activation='relu')) #
 	#model.add(Dropout(0.25)) #
@@ -189,18 +189,18 @@ def eval_mod(predicted, y_val_new):
 # Train an ensemble of models, average later
 def train_ensemble(X_train_new, y_train_new, my_callbacks, mod_num, X_v, y_v): 
 	for i in range(mod_num):
-		es = EarlyStopping(monitor="val_loss", mode='min', patience=4, verbose=1)
-		mc = ModelCheckpoint("model_cnn_3class"+ str(i) +"_gauss_512_1conv.h5", monitor='val_acc', mode='max', verbose=1, save_best_only=True)
+		es = EarlyStopping(monitor="val_loss", mode='min', patience=5, verbose=1)
+		mc = ModelCheckpoint("model_cnn_3class"+ str(i) +"_gauss_3000_2conv_GAS.h5", monitor='val_loss', mode='min', verbose=1, save_best_only=True)
 		model = branch_conv1d_mod()
 		X_v = [X_v[:,:,0].reshape(X_v.shape[0], X_v.shape[1], 1), X_v[:,:,1].reshape(X_v.shape[0], X_v.shape[1], 1)]
 		X_train_new, y_train_new = shuffle(X_train_new, y_train_new)
-		hist = model.fit([X_train_new[:,:,0].reshape(X_train_new.shape[0], X_train_new.shape[1], 1), X_train_new[:,:,1].reshape(X_train_new.shape[0], X_train_new.shape[1], 1)], y_train_new, validation_data = (X_v, y_v), epochs=20, batch_size=100, callbacks=[es, mc])
+		hist = model.fit([X_train_new[:,:,0].reshape(X_train_new.shape[0], X_train_new.shape[1], 1), X_train_new[:,:,1].reshape(X_train_new.shape[0], X_train_new.shape[1], 1)], y_train_new, validation_data = (X_v, y_v), epochs=40, batch_size=100, callbacks=[es, mc])
 		#model.save("model_cnn_3class"+ str(i) +"_gauss.h5")
 		#model.save("model_cnn_3class.h5")
 		#model.save("model_cnn_3class_1000fc.h5")
 		print("Load best model")
-		model = load_model("model_cnn_3class"+ str(i) +"_gauss_512_1conv.h5")
-		X_val_new, y_val_new = get_train_multi(type_name='test_gauss')
+		model = load_model("model_cnn_3class"+ str(i) +"_gauss_3000_2conv_GAS.h5")
+		X_val_new, y_val_new = get_train_multi(type_name='test')
 		predicted = model.predict([X_val_new[:,:,0].reshape(X_val_new.shape[0], X_val_new.shape[1], 1), X_val_new[:,:,1].reshape(X_val_new.shape[0], X_val_new.shape[1], 1)])
 		eval_mod(predicted, y_val_new)
 		
@@ -214,24 +214,21 @@ def train_merged(X_train_new, y_train_new, my_callbacks):
 	predicted = model.predict(numpy.concatenate([X_val_new[:,:,0], X_val_new[:,:,1]], axis=1).reshape(X_val_new.shape[0], X_val_new.shape[1]*2, 1))
 	eval_mod(predicted, y_val_new)
 
-def train_local(X_train_new, y_train_new, my_callbacks):
-	# Fit for local-only case
+def train_local(X_train_new, y_train_new, my_callbacks, X_v, y_v, glob=False):
+	if glob:
+		tx = 'global'
+	else:
+		tx = 'local'
 	model = conv1d_multi_local()
-	hist = model.fit(X_train_new[:,:,0].reshape(X_train_new.shape[0], X_train_new.shape[1], 1), y_train_new, epochs=20, batch_size=100, callbacks=my_callbacks)
-	model.save("model_cnn_3class_local.h5")
-	print("Saved model to disk")
-	X_val_new, y_val_new = get_train_multi(type_name='test_gauss')
-	predicted = model.predict(X_val_new[:,:,0].reshape(X_val_new.shape[0], X_val_new.shape[1], 1))
-	eval_mod(predicted, y_val_new)
-
-def train_global(X_train_new, y_train_new, my_callbacks):
-	# Fit for global-only case
-	model = conv1d_multi_local()
-	hist = model.fit(X_train_new[:,:,1].reshape(X_train_new.shape[0], X_train_new.shape[1], 1), y_train_new, epochs=20, batch_size=100, callbacks=my_callbacks)
-	model.save("model_cnn_3class_global.h5")
-	print("Saved model to disk")
-	X_val_new, y_val_new = get_train_multi(type_name='test_gauss')
-	predicted = model.predict(X_val_new[:,:,1].reshape(X_val_new.shape[0], X_val_new.shape[1], 1))
+	es = EarlyStopping(monitor="val_loss", mode='min', patience=5, verbose=1)
+	mc = ModelCheckpoint("model_cnn_3class_gauss_3000_2conv_"+tx+".h5", monitor='val_acc', mode='max', verbose=1, save_best_only=True)
+	X_v = X_v[:,:,int(glob)].reshape(X_v.shape[0], X_v.shape[1], 1)
+	X_train_new, y_train_new = shuffle(X_train_new, y_train_new)
+	hist = model.fit(X_train_new[:,:,int(glob)].reshape(X_train_new.shape[0], X_train_new.shape[1], 1), y_train_new, validation_data = (X_v, y_v), epochs=40, batch_size=100, callbacks=[es, mc])
+	print("Load best model")
+	model = load_model("model_cnn_3class_gauss_3000_2conv_"+tx+".h5")
+	X_val_new, y_val_new = get_train_multi(type_name='test')
+	predicted = model.predict(X_val_new[:,:,int(glob)].reshape(X_val_new.shape[0], X_val_new.shape[1], 1))
 	eval_mod(predicted, y_val_new)
 
 def train_nh3(X_train_new, y_train_new, my_callbacks, X_v, y_v):
@@ -247,7 +244,7 @@ def train_nh3(X_train_new, y_train_new, my_callbacks, X_v, y_v):
 	predicted = model.predict([X_val_new[:,:,0].reshape(X_val_new.shape[0], X_val_new.shape[1], 1), X_val_new[:,:,1].reshape(X_val_new.shape[0], X_val_new.shape[1], 1)])
 	eval_mod(predicted, y_val_new)
 
-def fit_cnn(nh3=False, plot=False):
+def fit_cnn(nh3=False, plot=False, local=False, glob=False):
 # Load training and validation data
 	if nh3:
 		# Train for ammonia hyperfine case
@@ -255,7 +252,7 @@ def fit_cnn(nh3=False, plot=False):
 		X_v, y_v = get_train_nh3(type_name='gas_val')
 	else:
 		# Train for non-hyperfine case
-		X_train_new, y_train_new = get_train_multi(type_name='train_gauss')
+		X_train_new, y_train_new = get_train_multi(type_name='train')
 		X_v, y_v = get_train_multi(type_name='val')
 
 
@@ -273,7 +270,14 @@ def fit_cnn(nh3=False, plot=False):
 
 	if nh3:
 		train_nh3(X_train_new, y_train_new, my_callbacks, X_v=X_v, y_v=y_v)
+	elif local:
+		train_local(X_train_new, y_train_new, my_callbacks, X_v=X_v, y_v=y_v, glob=glob)
+	elif glob:
+		train_local(X_train_new, y_train_new, my_callbacks, X_v=X_v, y_v=y_v, glob=glob)
 	else:
 		train_ensemble(X_train_new, y_train_new, my_callbacks, mod_num=1, X_v=X_v, y_v=y_v)
 
-fit_cnn(nh3=True, plot=False)
+#fit_cnn(nh3=True, plot=False)
+#fit_cnn(nh3=False, plot=False)
+#fit_cnn(nh3=False, plot=False, local=True)
+#fit_cnn(nh3=False, plot=False, local=False, glob=True)
