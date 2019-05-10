@@ -261,6 +261,7 @@ def generate_cubes(nCubes=90, nBorder=1, noise_rms=0.1, fix_vlsr=False,
 #    else:
 #        generate_cubes()
 
-generate_cubes(nCubes=300000, set_name='GAS_reg_train', regression=True)
-generate_cubes(nCubes=90000, set_name='GAS_reg_val', regression=True)
+#generate_cubes(nCubes=300000, set_name='GAS_reg_train', regression=True)
+#generate_cubes(nCubes=90000, set_name='GAS_reg_val', regression=True)
 generate_cubes(nCubes=30000, set_name='GAS_reg_test', regression=True)
+#generate_cubes(nCubes=3000, set_name='GAS_test_small', regression=False)
