@@ -28,7 +28,7 @@ def p_eval2(x, a, x0, sigma, a1, x1, sigma1):
 	return one+two
 
 def test_model():
-	model = load_model('model_cnn_tpeak_gauss_512_2conv.h5')
+	model = load_model('model_cnn_tpeak_gauss_3000_2conv.h5')
 	X_val_new, y_val_new = get_train_set2(type_name='test')
 	print X_val_new.shape
 	#X_val_new = X_val_new.reshape(X_val_new.shape[0], img_rows, img_depth)
@@ -38,18 +38,21 @@ def test_model():
 	results = mean_absolute_error(y_val_new, preds)
 	print("MAE: " + str(results))
 	f,(ax1,ax2,ax3,ax4,ax5, ax6) = plt.subplots(1,6)
-	ax1.scatter(preds[:,0], y_val_new[:,0], marker='.', alpha=0.3)
+	ax1.scatter(preds[:,0], y_val_new[:,0], marker='.', alpha=0.3, rasterized=True)
+	#heatmap, xedges, yedges = np.histogram2d(preds[:,0], y_val_new[:,0], bins=100)
+	#extent = [xedges[0], xedges[-1], yedges[0], yedges[-1]]
+	#ax1.imshow(heatmap.T, extent=extent, origin='lower')
 	ax1.plot([min(preds[:,0]),max(preds[:,0])],[min(preds[:,0]),max(preds[:,0])], linestyle='dashed', color='black')
-	ax2.scatter(preds[:,1], y_val_new[:,1], marker='.', alpha=0.3, label='CNN')
+	ax2.scatter(preds[:,1], y_val_new[:,1], marker='.', alpha=0.3, label='CNN', rasterized=True)
 	ax2.plot([min(preds[:,1]),max(preds[:,1])],[min(preds[:,1]),max(preds[:,1])], linestyle='dashed', color='black')
 	ax2.legend()
-	ax3.scatter(preds[:,2], y_val_new[:,2], marker='.', alpha=0.3)
+	ax3.scatter(preds[:,2], y_val_new[:,2], marker='.', alpha=0.3, rasterized=True)
 	ax3.plot([min(preds[:,2]),max(preds[:,2])],[min(preds[:,2]),max(preds[:,2])], linestyle='dashed', color='black')
-	ax4.scatter(preds[:,3], y_val_new[:,3], marker='.', alpha=0.3)
+	ax4.scatter(preds[:,3], y_val_new[:,3], marker='.', alpha=0.3, rasterized=True)
 	ax4.plot([min(preds[:,3]),max(preds[:,3])],[min(preds[:,3]),max(preds[:,3])], linestyle='dashed', color='black')
-	ax5.scatter(preds[:,4], y_val_new[:,4], marker='.', alpha=0.3)
+	ax5.scatter(preds[:,4], y_val_new[:,4], marker='.', alpha=0.3, rasterized=True)
 	ax5.plot([min(preds[:,4]),max(preds[:,4])],[min(preds[:,4]),max(preds[:,4])], linestyle='dashed', color='black')
-	ax6.scatter(preds[:,5], y_val_new[:,5], marker='.', alpha=0.3)
+	ax6.scatter(preds[:,5], y_val_new[:,5], marker='.', alpha=0.3, rasterized=True)
 	ax6.plot([min(preds[:,5]),max(preds[:,5])],[min(preds[:,5]),max(preds[:,5])], linestyle='dashed', color='black')
 	ax1.set_ylabel('Ground Truth')
 	ax1.set_xlabel('Predicted V$_{LSR}$')
@@ -64,23 +67,39 @@ def test_model():
 	ax4.set_title('W2')
 	ax5.set_title('T1')
 	ax6.set_title('T2')
+	if 3==3:
+		ax4.set_xlim([-1,20])
+		ax4.set_ylim([1,12])
+		ax3.set_xlim([-1,20])
+		ax3.set_ylim([1,12])
+		ax5.set_xlim([0,1.4])
+		ax5.set_ylim([0,1.4])
+		ax6.set_xlim([0,1.4])
+		ax6.set_ylim([0,1.4])
+		ax2.set_xlim([-1.0,1.2])
+		ax2.set_ylim([-0.6,0.8])
+		ax1.set_xlim([-1.2,1.0])
+		ax1.set_ylim([-0.8,0.6])
 	f.set_size_inches(10,4)
+	f.suptitle('        MAE: '+ str(round(results,3)))
 	f.tight_layout()
 	plt.show()
 
 	for i,j,k in zip(X_val_new, preds, y_val_new): 
 			spec = i[:,0]
-			gauss = p_eval2(numpy.linspace(-1,1, len(spec)), j[4], j[0], j[2], j[5], j[1], j[3])
-			gauss2 = p_eval2(numpy.linspace(-1,1, len(spec)), k[4], k[0], k[2], k[5], k[1], k[3])
-			plt.plot(numpy.linspace(-1,1, len(spec)), gauss2, zorder=20, color='black', linestyle='--')
-			plt.plot(numpy.linspace(-1,1, len(spec)), gauss, zorder=11, color='orange')
-			plt.plot(numpy.linspace(-1,1, len(spec)), spec)
+			xaxis = numpy.linspace(-1,1, len(spec))
+			step = abs(xaxis[23]-xaxis[24])
+			gauss = p_eval2(xaxis, j[4], j[0], j[2]*step, j[5], j[1], j[3]*step)
+			gauss2 = p_eval2(xaxis, k[4], k[0], k[2]*step, k[5], k[1], k[3]*step)
+			plt.plot(xaxis, gauss2, zorder=20, color='black', linestyle='--')
+			plt.plot(xaxis, gauss, zorder=11, color='orange')
+			plt.plot(xaxis, spec)
 			plt.scatter([k[0],k[1]], [k[4],k[5]], color='black', label='Ground Truth', marker='.', zorder=9)
 			plt.scatter([j[0],j[1]], [j[4],j[5]], color='orange', zorder=10, alpha=0.7, label='CNN-prediction', marker='.')
-			plt.plot([j[0]-(j[2]/2), j[0]+(j[2]/2)], [0,0], color='orange')
-			plt.plot([j[1]-(j[3]/2), j[1]+(j[3]/2)], [0.1,0.1], color='orange')
-			plt.plot([k[0]-(k[2]/2), k[0]+(k[2]/2)], [0.05,0.05], color='black')
-			plt.plot([k[1]-(k[3]/2), k[1]+(k[3]/2)], [0.15,0.15], color='black')
+			plt.plot([j[0]-(j[2]*step/2), j[0]+(j[2]*step/2)], [0,0], color='orange')
+			plt.plot([j[1]-(j[3]*step/2), j[1]+(j[3]*step/2)], [0.1,0.1], color='orange')
+			plt.plot([k[0]-(k[2]*step/2), k[0]+(k[2]*step/2)], [0.05,0.05], color='black')
+			plt.plot([k[1]-(k[3]*step/2), k[1]+(k[3]*step/2)], [0.15,0.15], color='black')
 			plt.xlabel('VLSR')
 			plt.ylabel('Normalized Intensity')
 			plt.legend()
@@ -90,32 +109,29 @@ def get_train_set2(type_name='train'):
 	# Quicker data loading method
 	# Data is stored and loaded in two h5 files
 	# One with training data, other with training labels
+
 	print 'Loading Training Data...'
-	with h5py.File('three_class/'+ type_name +'_regression_gauss_three_class.h5', 'r') as hf:
+	with h5py.File('three_class_gauss_'+type_name+'1_reg.h5', 'r') as hf:
 		X = hf['data'][:]
-		# regression2 was previous version
 	hf.close()
-	with h5py.File('three_class/labels_'+ type_name +'_regression_gauss_three_class.h5', 'r') as hf:
+	with h5py.File('params_three_class_gauss_'+type_name+'1_reg.h5', 'r') as hf:
 		y = hf['data'][:]
 	hf.close()
-	count=0
-	for i in y:
-		y[count]=[min(i[0:2]), max(i[0:2]), i[2:4][numpy.argmin(i[0:2])], i[2:4][numpy.argmax(i[0:2])], i[4:][numpy.argmin(i[0:2])], i[4:][numpy.argmax(i[0:2])]]
-		count+=1
-	#for i, j in zip(X[:,:,0].reshape(X.shape[0], X.shape[1], 1), y):
-		#plt.plot(numpy.linspace(-1,1, len(i)), i)
-		#plt.scatter([j[0], j[1]], [0,0])
-		#plt.show()
 	return X, y
 
 def test_chi(use_cnn=False):
 	X_val_new, y_val_new = get_train_set2(type_name='test')
-	print y_val_new[0:5]
+	ax = numpy.linspace(-1,1,500)
+	step = abs(ax[23]-ax[24])
 	if use_cnn:
 		preds = numpy.load('chi_predictions_3class_reg_local_tpeak_cnn.npy')
 		preds = numpy.column_stack((preds[:,1], preds[:,2], preds[:,4], preds[:,5], preds[:,0], preds[:,3]))
+		preds[:,1] = preds[:,1]/step
+		preds[:,3] = preds[:,3]/step
+		tx = 'CNN+$\chi^2$'
 	else:
 		preds = numpy.load('chi_predictions_3class_reg_local_tpeak.npy')
+		tx = '$\chi^2$'
 	print min(preds[:,0])
 	print min(preds[:,1])
 	print min(preds[:,2])
@@ -130,38 +146,38 @@ def test_chi(use_cnn=False):
 	if use_cnn==False:
 		preds[:,0] = 2.*((preds[:,0]-0.)/(499.-0.))-1
 		preds[:,1] = 2.*((preds[:,1]-0.)/(499.-0.))-1
-		preds[:,2] = 2.*(preds[:,2]/500.)
-		preds[:,3] = 2.*(preds[:,3]/500.)
+		preds[:,2] = (preds[:,2])
+		preds[:,3] = (preds[:,3])
 
 	results = mean_absolute_error(y_val_new, preds)
 	print("MAE: " + str(results))
 	f,(ax1,ax2,ax3,ax4, ax5, ax6) = plt.subplots(1,6)
-	ax1.scatter(preds[:,0], y_val_new[:,0], marker='.', alpha=0.3, color='green')
+	ax1.scatter(preds[:,0], y_val_new[:,0], marker='.', alpha=0.3, color='green', rasterized=True)
 	ax1.plot([min(preds[:,0]),max(preds[:,0])],[min(preds[:,0]),max(preds[:,0])], linestyle='dashed', color='black')
-	ax2.scatter(preds[:,1], y_val_new[:,1], marker='.', alpha=0.3, color='green', label='$\chi^2$ Preds')
+	ax2.scatter(preds[:,1], y_val_new[:,1], marker='.', alpha=0.3, color='green', label=tx, rasterized=True)
 	ax2.plot([min(preds[:,1]),max(preds[:,1])],[min(preds[:,1]),max(preds[:,1])], linestyle='dashed', color='black')
 	ax2.legend()
-	ax3.scatter(preds[:,2], y_val_new[:,2], marker='.', alpha=0.3, color='green')
+	ax3.scatter(preds[:,2], y_val_new[:,2], marker='.', alpha=0.3, color='green', rasterized=True)
 	ax3.plot([min(preds[:,2]),max(preds[:,2])],[min(preds[:,2]),max(preds[:,2])], linestyle='dashed', color='black')
-	ax4.scatter(preds[:,3], y_val_new[:,3], marker='.', alpha=0.3, color='green')
+	ax4.scatter(preds[:,3], y_val_new[:,3], marker='.', alpha=0.3, color='green', rasterized=True)
 	ax4.plot([min(preds[:,3]),max(preds[:,3])],[min(preds[:,3]),max(preds[:,3])], linestyle='dashed', color='black')
-	ax5.scatter(preds[:,4], y_val_new[:,4], marker='.', alpha=0.3, color='green')
+	ax5.scatter(preds[:,4], y_val_new[:,4], marker='.', alpha=0.3, color='green', rasterized=True)
 	ax5.plot([min(preds[:,4]),max(preds[:,4])],[min(preds[:,4]),max(preds[:,4])], linestyle='dashed', color='black')
-	ax6.scatter(preds[:,5], y_val_new[:,5], marker='.', alpha=0.3, color='green')
+	ax6.scatter(preds[:,5], y_val_new[:,5], marker='.', alpha=0.3, color='green', rasterized=True)
 	ax6.plot([min(preds[:,5]),max(preds[:,5])],[min(preds[:,5]),max(preds[:,5])], linestyle='dashed', color='black')
-	if use_cnn==False:
-		ax4.set_xlim([-0.05,0.15])
-		ax4.set_ylim([0,0.08])
-		ax3.set_xlim([-0.05,0.15])
-		ax3.set_ylim([0,0.08])
-		ax5.set_xlim([0,1.2])
-		ax5.set_ylim([0,1.2])
-		ax6.set_xlim([0,1.2])
-		ax6.set_ylim([0,1.2])
-		ax2.set_xlim([-0.6,1.0])
-		ax2.set_ylim([-0.6,1.0])
-		ax1.set_xlim([-0.6,0.8])
-		ax1.set_ylim([-0.6,0.8])
+	if use_cnn!=3:
+		ax4.set_xlim([-1,20])
+		ax4.set_ylim([1,12])
+		ax3.set_xlim([-1,20])
+		ax3.set_ylim([1,12])
+		ax5.set_xlim([0,1.4])
+		ax5.set_ylim([0,1.4])
+		ax6.set_xlim([0,1.4])
+		ax6.set_ylim([0,1.4])
+		ax2.set_xlim([-1.0,1.2])
+		ax2.set_ylim([-0.6,0.8])
+		ax1.set_xlim([-1.2,1.0])
+		ax1.set_ylim([-0.8,0.6])
 	ax1.set_ylabel('Ground Truth')
 	ax1.set_xlabel('Predicted V$_{LSR}$')
 	ax2.set_xlabel('Predicted V$_{LSR}$')
@@ -175,7 +191,7 @@ def test_chi(use_cnn=False):
 	ax4.set_title('W2')
 	ax5.set_title('T1')
 	ax6.set_title('T2')
-	#f.suptitle('$\chi^2$ Predictions')
+	f.suptitle('        MAE: '+ str(round(results,3)))
 	f.set_size_inches(10,4)
 	f.tight_layout()
 	plt.show()
@@ -200,9 +216,9 @@ def branch_conv1d_mod():
 	b2_flat = Flatten()(b2_conv2)
 	merge1 = concatenate([b1_flat, b2_flat])
 	#dense1 = Dense(1000, activation='relu')(merge1) 
-	dense1 = Dense(512, activation='relu')(merge1) #regular 3class
+	dense1 = Dense(3000, activation='relu')(merge1) #regular 3class
 	#dense2 = Dense(500, activation='relu')(dense1)
-	dense2 = Dense(512, activation='relu')(dense1) #regular 3class
+	dense2 = Dense(3000, activation='relu')(dense1) #regular 3class
 	dense3 = Dense(6)(dense2)
 	model = Model(inputs=[b1_input, b2_input], outputs=dense3)
 	#model.add(Dense(1000, activation='relu'))
@@ -247,17 +263,17 @@ def train_model():
 
 	model = branch_conv1d_mod()
 
-	es = EarlyStopping(monitor="val_loss", mode='min', patience=4, verbose=1)
-	mc = ModelCheckpoint("model_cnn_tpeak_gauss_512_2conv.h5", monitor='val_loss', mode='min', verbose=1, save_best_only=True)
+	es = EarlyStopping(monitor="val_loss", mode='min', patience=5, verbose=1)
+	mc = ModelCheckpoint("model_cnn_tpeak_gauss_3000_2conv.h5", monitor='val_loss', mode='min', verbose=1, save_best_only=True)
 	#print numpy.shape(X_train_new)
 	#print numpy.shape(y_train_new)
 	#hist = model.fit_generator(generate_arrays_from_file(), epochs=10, steps_per_epoch=1000)
-	hist = model.fit([X_train_new[:,:,0].reshape(X_train_new.shape[0], X_train_new.shape[1], 1), X_train_new[:,:,1].reshape(X_train_new.shape[0], X_train_new.shape[1], 1)], y_train_new, validation_data = (X_v, y_v), epochs=20, batch_size=100, callbacks=[es,mc])
+	hist = model.fit([X_train_new[:,:,0].reshape(X_train_new.shape[0], X_train_new.shape[1], 1), X_train_new[:,:,1].reshape(X_train_new.shape[0], X_train_new.shape[1], 1)], y_train_new, validation_data = (X_v, y_v), epochs=40, batch_size=100, callbacks=[es,mc])
 	#hist = model.fit(X_train_new, y_train_new, epochs=40, batch_size=32, callbacks=my_callbacks, 	validation_split=0.3)
 	#model.save("model_cnn_tpeak2.h5")
 	#print("Saved model to disk")
 	# Final evaluation of the model
-	model = load_model("model_cnn_tpeak_gauss_512_2conv.h5")
+	model = load_model("model_cnn_tpeak_gauss_3000_2conv.h5")
 	X_val_new, y_val_new = get_train_set2(type_name='test')
 	X_val_new = [X_val_new[:,:,0].reshape(X_val_new.shape[0], X_val_new.shape[1], 1), X_val_new[:,:,1].reshape(X_val_new.shape[0], X_val_new.shape[1], 1)]
 	#score = model.score(X_val_new, y_val_new)
@@ -309,11 +325,11 @@ def test_data(f='CygX_N_13CO_conv_test_smooth_clip.fits', c=1, plot=False, compa
 	#	X_val_new[count] = i*(1/numpy.max(i))
 
 	# load model
-	new_model = load_model("model_cnn_tpeak_gauss_512_2conv.h5")
+	new_model = load_model("model_cnn_tpeak_gauss_3000_2conv.h5")
 	print "Loaded model from disk"
 
 	# load model
-	model = load_model("model_cnn_3class.h5")
+	model = load_model("model_cnn_3class0_gauss_3000_2conv_GAS.h5")
 	print "Loaded model from disk"
 	
 	# Make prediction on each pixel and output as 2D fits image
@@ -332,8 +348,8 @@ def test_data(f='CygX_N_13CO_conv_test_smooth_clip.fits', c=1, plot=False, compa
 		if ind==2:
 			out_arr[j[0], j[1]] = (max(cubeax)-min(cubeax))*(i[0]-abs(-1))/(1--1) + max(cubeax) 
 			out_arr2[j[0],j[1]] = (max(cubeax)-min(cubeax))*(i[1]-abs(-1))/(1--1) + max(cubeax)
-			out_arr3[j[0], j[1]] = i[2]*500.*step 
-			out_arr4[j[0],j[1]] = i[3]*500.*step
+			out_arr3[j[0], j[1]] = i[2]*step 
+			out_arr4[j[0],j[1]] = i[3]*step
 			out_arr5[j[0], j[1]] = i[4]*Tmax[counter]
 			out_arr6[j[0], j[1]] = i[5]*Tmax[counter]
 		counter+=1
@@ -365,8 +381,9 @@ def test_data(f='CygX_N_13CO_conv_test_smooth_clip.fits', c=1, plot=False, compa
 			# initial guess for Gaussian mean
 			vpeak = numpy.linspace(-1,1, len(spec))[max_ch]
 			err = np.std(np.append(spec[0:50], spec[-50:]))
-			if (ind==2) and ((numpy.max(spec)/err)>5):
+			if (ind==2) and ((numpy.max(spec)/err)>30):
 				xaxis = numpy.linspace(-1,1, len(spec))
+				step = abs(xaxis[23]-xaxis[24]) 
 				coeffs = get_guess(vpeak, xaxis, spec, err)
 				print coeffs
 				gauss2 = np.array(p_eval2(xaxis,coeffs[0], coeffs[1], coeffs[2], coeffs[3], coeffs[4], coeffs[5]))	
@@ -378,12 +395,12 @@ def test_data(f='CygX_N_13CO_conv_test_smooth_clip.fits', c=1, plot=False, compa
 					plt.plot(xaxis, spec)
 					plt.scatter([V1, V2], [0.05,0.15], color='black', label='$\chi^2$-fit', marker='.')
 					plt.scatter([j[0],j[1]], [0,0.1], color='orange', zorder=10, alpha=0.7, label='CNN-prediction', marker='.')
-					plt.plot([j[0]-(j[2]/2), j[0]+(j[2]/2)], [0,0], color='orange')
-					plt.plot([j[1]-(j[3]/2), j[1]+(j[3]/2)], [0.1,0.1], color='orange')
+					plt.plot([j[0]-(j[2]*step/2), j[0]+(j[2]*step/2)], [0,0], color='orange')
+					plt.plot([j[1]-(j[3]*step/2), j[1]+(j[3]*step/2)], [0.1,0.1], color='orange')
 					plt.plot([V1-(W1/2), V1+(W1/2)], [0.05,0.05], color='black')
 					plt.plot([V2-(W2/2), V2+(W2/2)], [0.15,0.15], color='black')
 				
-					gauss = p_eval2(numpy.linspace(-1,1, len(spec)), j[4], j[0], j[2], j[5], j[1], j[3])
+					gauss = p_eval2(xaxis, j[4], j[0], j[2]*step, j[5], j[1], j[3]*step)
 					plt.plot(xaxis, gauss2, linestyle='dotted', color='black', label='$\chi^2$-fit', zorder=11)
 					plt.plot(xaxis, gauss, linestyle='-', color='orange', label='CNN-prediction', zorder=9)
 					
@@ -460,10 +477,10 @@ def aic(ydata,ymod,deg=2,sd=None):
 #test_data(f='NGC7538_C18O_conv_test_smooth_clip.fits', c=0)
 
 # Load training data and reshape
-train_model()
+#train_model()
 
 # Test trained network on test set
-#test_model()
+test_model()
 
 # Compare network performance with traditional method
 #test_chi(use_cnn=True)
