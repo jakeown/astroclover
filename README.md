@@ -14,3 +14,13 @@ CLOVER has two prediction steps:
  - Centroid Velocity
  - Velocity Dispersion
  - Peak Intensity
+
+Usage:
+
+First, run the download_models.py script.  This will download the trained CNNs from a remote directory.
+
+Next, prepare your data cube by clipping the spectral axis to 500 channels for a non-hyperfine emission line or 1000 channels for a NH3 (1,1) cube.
+
+To run CLOVER on the data cube, simply use the predict(f=your_cube_name.fits) function in the clover.py script. If your cube is NH3 (1,1), add nh3=True in the call to predict() (e.g., predict(f=your_nh3_cube.fits, nh3=False)).
+
+CLOVER will then output the classification map and parmeter predictions as individual FITS files.
