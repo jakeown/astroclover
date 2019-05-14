@@ -281,7 +281,7 @@ def train_model():
 	results = mean_squared_error(y_val_new, model.predict(X_val_new))
 	print("MSE: %.5f%%" % (results))
 
-def test_data(f='CygX_N_13CO_conv_test_smooth_clip.fits', c=1, plot=False, compare=False):
+def test_data(f='CygX_N_13CO_conv_test_smooth_clip.fits', plot=False, compare=False):
 	# c is the class of the test data (0=single, 1=multi)
 	data = fits.getdata(f)
 	header = fits.getheader(f)
@@ -364,12 +364,12 @@ def test_data(f='CygX_N_13CO_conv_test_smooth_clip.fits', c=1, plot=False, compa
 	del header['CTYPE3']
 	del header['CRVAL3']
 	# Write to fits file
-	fits.writeto(f.split('.fits')[0]+'_pred_cnn_tpeak_comp1.fits', data=out_arr, header=header, overwrite=True)
-	fits.writeto(f.split('.fits')[0]+'_pred_cnn_tpeak_comp2.fits', data=out_arr2, header=header, overwrite=True)
-	fits.writeto(f.split('.fits')[0]+'_pred_cnn_tpeak_sig1.fits', data=out_arr3, header=header, overwrite=True)
-	fits.writeto(f.split('.fits')[0]+'_pred_cnn_tpeak_sig2.fits', data=out_arr4, header=header, overwrite=True)
-	fits.writeto(f.split('.fits')[0]+'_pred_cnn_tpeak_tpeak1.fits', data=out_arr5, header=header, overwrite=True)
-	fits.writeto(f.split('.fits')[0]+'_pred_cnn_tpeak_tpeak2.fits', data=out_arr6, header=header, overwrite=True)
+	fits.writeto(f.split('.fits')[0]+'_pred_cnn_vlsr1.fits', data=out_arr, header=header, overwrite=True)
+	fits.writeto(f.split('.fits')[0]+'_pred_cnn_vlsr2.fits', data=out_arr2, header=header, overwrite=True)
+	fits.writeto(f.split('.fits')[0]+'_pred_cnn_sig1.fits', data=out_arr3, header=header, overwrite=True)
+	fits.writeto(f.split('.fits')[0]+'_pred_cnn_sig2.fits', data=out_arr4, header=header, overwrite=True)
+	fits.writeto(f.split('.fits')[0]+'_pred_cnn_tpeak1.fits', data=out_arr5, header=header, overwrite=True)
+	fits.writeto(f.split('.fits')[0]+'_pred_cnn_tpeak2.fits', data=out_arr6, header=header, overwrite=True)
 	if compare:
 		#numpy.flip(X_val_new,axis=1)
 		for i,j,k in zip(X_val_new, predictions, pred_class):
@@ -468,19 +468,19 @@ def aic(ydata,ymod,deg=2,sd=None):
       return AICc
 
 # Predicting Parameters for Real Cubes
-#test_data(f='B18_HC5N_conv_test_smooth_clip.fits', c=0)
-#test_data(f='CygX_N_13CO_conv_test_smooth_clip.fits', c=1)
-#test_data(f='CygX_N_C18O_conv_test_smooth_clip2.fits', c=1)
-#test_data(f='Oph_13CO_conv_test_smooth_clip.fits', c=0)
-#test_data(f='Oph2_13CO_conv_test_smooth_clip.fits', c=1, plot=True, compare=True)
-#test_data(f='W3Main_C18O_conv_test_smooth_clip.fits', c=0)
-#test_data(f='NGC7538_C18O_conv_test_smooth_clip.fits', c=0)
+#test_data(f='B18_HC5N_conv_test_smooth_clip.fits')
+#test_data(f='CygX_N_13CO_conv_test_smooth_clip.fits')
+#test_data(f='CygX_N_C18O_conv_test_smooth_clip2.fits')
+#test_data(f='Oph_13CO_conv_test_smooth_clip.fits')
+#test_data(f='Oph2_13CO_conv_test_smooth_clip.fits', plot=True, compare=True)
+#test_data(f='W3Main_C18O_conv_test_smooth_clip.fits')
+#test_data(f='NGC7538_C18O_conv_test_smooth_clip.fits')
 
 # Load training data and reshape
 #train_model()
 
 # Test trained network on test set
-test_model()
+#test_model()
 
 # Compare network performance with traditional method
 #test_chi(use_cnn=True)
