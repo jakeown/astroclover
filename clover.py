@@ -20,4 +20,4 @@ def predict(f='Oph2_13CO_conv_test_smooth_clip.fits', nh3=False):
 		predict_gauss_reg(f=f)
 
 #predict()
-predict(f='M17_NH3_11_ml_test.fits', nh3=True)
+#predict(f='M17_NH3_11_ml_test.fits', nh3=True)
