@@ -1,0 +1,5 @@
+*.h5
+*.tar
+*.tar.gz
+*.fits
+*.pyc
