@@ -190,16 +190,15 @@ def eval_mod(predicted, y_val_new):
 def train_ensemble(X_train_new, y_train_new, my_callbacks, mod_num, X_v, y_v): 
 	for i in range(mod_num):
 		es = EarlyStopping(monitor="val_loss", mode='min', patience=5, verbose=1)
-		mc = ModelCheckpoint("model_cnn_3class"+ str(i) +"_gauss_3000_2conv_GAS.h5", monitor='val_loss', mode='min', verbose=1, save_best_only=True)
+		mc = ModelCheckpoint("model_cnn_3class"+ str(i+2) +"_gauss_3000_2conv_GAS.h5", monitor='val_loss', mode='min', verbose=1, save_best_only=True)
 		model = branch_conv1d_mod()
-		X_v = [X_v[:,:,0].reshape(X_v.shape[0], X_v.shape[1], 1), X_v[:,:,1].reshape(X_v.shape[0], X_v.shape[1], 1)]
 		X_train_new, y_train_new = shuffle(X_train_new, y_train_new)
 		hist = model.fit([X_train_new[:,:,0].reshape(X_train_new.shape[0], X_train_new.shape[1], 1), X_train_new[:,:,1].reshape(X_train_new.shape[0], X_train_new.shape[1], 1)], y_train_new, validation_data = (X_v, y_v), epochs=40, batch_size=100, callbacks=[es, mc])
 		#model.save("model_cnn_3class"+ str(i) +"_gauss.h5")
 		#model.save("model_cnn_3class.h5")
 		#model.save("model_cnn_3class_1000fc.h5")
 		print("Load best model")
-		model = load_model("model_cnn_3class"+ str(i) +"_gauss_3000_2conv_GAS.h5")
+		model = load_model("model_cnn_3class"+ str(i+2) +"_gauss_3000_2conv_GAS.h5")
 		X_val_new, y_val_new = get_train_multi(type_name='test')
 		predicted = model.predict([X_val_new[:,:,0].reshape(X_val_new.shape[0], X_val_new.shape[1], 1), X_val_new[:,:,1].reshape(X_val_new.shape[0], X_val_new.shape[1], 1)])
 		eval_mod(predicted, y_val_new)
@@ -221,7 +220,7 @@ def train_local(X_train_new, y_train_new, my_callbacks, X_v, y_v, glob=False):
 		tx = 'local'
 	model = conv1d_multi_local()
 	es = EarlyStopping(monitor="val_loss", mode='min', patience=5, verbose=1)
-	mc = ModelCheckpoint("model_cnn_3class_gauss_3000_2conv_"+tx+".h5", monitor='val_acc', mode='max', verbose=1, save_best_only=True)
+	mc = ModelCheckpoint("model_cnn_3class_gauss_3000_2conv_"+tx+".h5", monitor='val_loss', mode='min', verbose=1, save_best_only=True)
 	X_v = X_v[:,:,int(glob)].reshape(X_v.shape[0], X_v.shape[1], 1)
 	X_train_new, y_train_new = shuffle(X_train_new, y_train_new)
 	hist = model.fit(X_train_new[:,:,int(glob)].reshape(X_train_new.shape[0], X_train_new.shape[1], 1), y_train_new, validation_data = (X_v, y_v), epochs=40, batch_size=100, callbacks=[es, mc])
@@ -231,18 +230,19 @@ def train_local(X_train_new, y_train_new, my_callbacks, X_v, y_v, glob=False):
 	predicted = model.predict(X_val_new[:,:,int(glob)].reshape(X_val_new.shape[0], X_val_new.shape[1], 1))
 	eval_mod(predicted, y_val_new)
 
-def train_nh3(X_train_new, y_train_new, my_callbacks, X_v, y_v):
-	es = EarlyStopping(monitor="val_loss", mode='min', patience=5, verbose=1)
-	mc = ModelCheckpoint("model_cnn_3class_nh3_sep_short_valloss_GAS.h5", monitor='val_loss', mode='min', verbose=1, save_best_only=True)
-	model = branch_conv1d_mod_nh3()
-	X_v = [X_v[:,:,0].reshape(X_v.shape[0], X_v.shape[1], 1), X_v[:,:,1].reshape(X_v.shape[0], X_v.shape[1], 1)]
-	hist = model.fit([X_train_new[:,:,0].reshape(X_train_new.shape[0], X_train_new.shape[1], 1), X_train_new[:,:,1].reshape(X_train_new.shape[0], X_train_new.shape[1], 1)], y_train_new, validation_data = (X_v, y_v), epochs=40, batch_size=100, callbacks=[es, mc])
-	#model.save("model_cnn_3class_nh3_sep_short.h5")
-	print("Load best model")
-	model = load_model("model_cnn_3class_nh3_sep_short_valloss_GAS.h5")
-	X_val_new, y_val_new = get_train_nh3(type_name='gas_test')
-	predicted = model.predict([X_val_new[:,:,0].reshape(X_val_new.shape[0], X_val_new.shape[1], 1), X_val_new[:,:,1].reshape(X_val_new.shape[0], X_val_new.shape[1], 1)])
-	eval_mod(predicted, y_val_new)
+def train_nh3(X_train_new, y_train_new, my_callbacks, X_v, y_v, mod_num=1):
+	for i in range(mod_num):
+		es = EarlyStopping(monitor="val_loss", mode='min', patience=5, verbose=1)
+		mc = ModelCheckpoint("model_cnn_3class_nh3_sep_short_valloss_GAS_"+ str(i+1) +".h5", monitor='val_loss', mode='min', verbose=1, save_best_only=True)
+		model = branch_conv1d_mod_nh3()
+		X_train_new, y_train_new = shuffle(X_train_new, y_train_new)
+		hist = model.fit([X_train_new[:,:,0].reshape(X_train_new.shape[0], X_train_new.shape[1], 1), X_train_new[:,:,1].reshape(X_train_new.shape[0], X_train_new.shape[1], 1)], y_train_new, validation_data = (X_v, y_v), epochs=40, batch_size=100, callbacks=[es, mc])
+		#model.save("model_cnn_3class_nh3_sep_short.h5")
+		print("Load best model")
+		model = load_model("model_cnn_3class_nh3_sep_short_valloss_GAS_"+ str(i+1) +".h5")
+		X_val_new, y_val_new = get_train_nh3(type_name='gas_test')
+		predicted = model.predict([X_val_new[:,:,0].reshape(X_val_new.shape[0], X_val_new.shape[1], 1), X_val_new[:,:,1].reshape(X_val_new.shape[0], X_val_new.shape[1], 1)])
+		eval_mod(predicted, y_val_new)
 
 def fit_cnn(nh3=False, plot=False, local=False, glob=False):
 # Load training and validation data
@@ -269,15 +269,17 @@ def fit_cnn(nh3=False, plot=False, local=False, glob=False):
 	X_train_new, y_train_new = shuffle(X_train_new, y_train_new, random_state=0)
 
 	if nh3:
-		train_nh3(X_train_new, y_train_new, my_callbacks, X_v=X_v, y_v=y_v)
+		X_v = [X_v[:,:,0].reshape(X_v.shape[0], X_v.shape[1], 1), X_v[:,:,1].reshape(X_v.shape[0], X_v.shape[1], 1)]
+		train_nh3(X_train_new, y_train_new, my_callbacks, X_v=X_v, y_v=y_v, mod_num=4)
 	elif local:
 		train_local(X_train_new, y_train_new, my_callbacks, X_v=X_v, y_v=y_v, glob=glob)
 	elif glob:
 		train_local(X_train_new, y_train_new, my_callbacks, X_v=X_v, y_v=y_v, glob=glob)
 	else:
-		train_ensemble(X_train_new, y_train_new, my_callbacks, mod_num=1, X_v=X_v, y_v=y_v)
+		X_v = [X_v[:,:,0].reshape(X_v.shape[0], X_v.shape[1], 1), X_v[:,:,1].reshape(X_v.shape[0], X_v.shape[1], 1)]
+		train_ensemble(X_train_new, y_train_new, my_callbacks, mod_num=4, X_v=X_v, y_v=y_v)
 
-fit_cnn(nh3=True, plot=False)
+#fit_cnn(nh3=True, plot=False)
 #fit_cnn(nh3=False, plot=False)
 #fit_cnn(nh3=False, plot=False, local=True)
 #fit_cnn(nh3=False, plot=False, local=False, glob=True)
