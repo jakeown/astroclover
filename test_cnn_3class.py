@@ -615,7 +615,7 @@ def test_data(f='CygX_N_13CO_conv_test_smooth_clip.fits', type_name='branch'):
 
 #test_data(f='B18_HC5N_conv_test_smooth_clip.fits', type_name='branch')
 #test_data(f='CygX_N_C18O_conv_test_smooth_clip2.fits', type_name='branch')
-test_data(f='Oph2_13CO_conv_test_smooth_clip.fits', type_name='branch')
+#test_data(f='Oph2_13CO_conv_test_smooth_clip.fits', type_name='branch')
 #test_data(f='Oph2_13CO_conv_test_smooth_clip.fits', type_name='global')
 #test_data(f='CygX_N_C18O_conv_test_smooth_clip2.fits', type_name='global')
 #test_data(f='B18_HC5N_conv_test_smooth_clip.fits', type_name='global')

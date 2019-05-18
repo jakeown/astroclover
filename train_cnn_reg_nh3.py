@@ -363,17 +363,17 @@ def test_data(f='CygX_N_13CO_conv_test_smooth_clip.fits', c=1, plot=False, compa
     	predictions[:,1] = 2*((predictions[:,1]-min(xax))/(max(xax)-min(xax)))-1 
 
 	# Reshape to get back 2D structure
-	xax = numpy.linspace(-1,1, 1000)
-	step = header['CDELT3']
 	cubeax = numpy.array(SpectralCube.read(f).with_spectral_unit(u.km / u.s, velocity_convention='radio').spectral_axis)
+	step_real = abs(cubeax[23]-cubeax[24])
+	step = abs(xax[23]-xax[24])
 	counter=0
 	for i,j,k in zip(predictions,indices, pred_class):
 		ind = numpy.argmax(k)
 		if ind==2:
 			out_arr[j[0], j[1]] = (max(cubeax)-min(cubeax))*(i[0]-abs(-1))/(1--1) + max(cubeax) 
 			out_arr2[j[0],j[1]] = (max(cubeax)-min(cubeax))*(i[1]-abs(-1))/(1--1) + max(cubeax)
-			out_arr3[j[0], j[1]] = i[2]*step 
-			out_arr4[j[0],j[1]] = i[3]*step
+			out_arr3[j[0], j[1]] = (i[2]/step)*step_real
+			out_arr4[j[0],j[1]] = (i[3]/step)*step_real
 			out_arr5[j[0], j[1]] = i[4]*Tmax[counter]
 			out_arr6[j[0], j[1]] = i[5]*Tmax[counter]
 		counter+=1
