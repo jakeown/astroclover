@@ -26,8 +26,6 @@ from keras.layers.wrappers import TimeDistributed
 from keras.optimizers import SGD, RMSprop
 from keras.utils import np_utils, generic_utils
 from scipy.optimize import curve_fit
-from sklearn.cross_validation import train_test_split
-from sklearn import cross_validation
 from sklearn import preprocessing
 import tensorflow as tf
 import os
