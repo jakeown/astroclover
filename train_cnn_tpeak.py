@@ -13,8 +13,6 @@ from keras.callbacks import EarlyStopping, ModelCheckpoint
 from keras.layers import Dense, Input, Activation, Dropout, Flatten, concatenate
 from sklearn.metrics import mean_squared_error, mean_absolute_error
 from scipy.optimize import curve_fit
-from sklearn.cross_validation import train_test_split
-from sklearn import cross_validation
 import tensorflow as tf
 import os
 import sys
