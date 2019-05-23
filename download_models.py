@@ -1,7 +1,7 @@
 import urllib2
 import tarfile
 
-print 'Downloading Models (2 GB)'
+print 'Downloading Models (9 GB)'
 
 filedata = urllib2.urlopen('http://www.astro.uvic.ca/~jkeown/astroclover/models.tar.gz')  
 datatowrite = filedata.read()
