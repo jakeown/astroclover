@@ -300,6 +300,46 @@ def train_model():
 	results = mean_squared_error(y_val_new, model.predict([X_val_new[:,:,0].reshape(X_val_new.shape[0], X_val_new.shape[1], 1), X_val_new[:,:,1].reshape(X_val_new.shape[0], X_val_new.shape[1], 1)]))
 	print("MSE: %.5f%%" % (results))
 
+# make an ensemble prediction for multi-class classification
+def ensemble_predictions(members, weights, testX):
+	# make predictions
+	yhats = [model.predict(testX) for model in members]
+	yhats = numpy.array(yhats)
+	# weighted sum across ensemble members
+	#summed = numpy.tensordot(yhats, weights, axes=((0),(0)))
+        summed = numpy.sum(yhats, axis=0)
+	# argmax across classes
+	result = numpy.argmax(summed, axis=1)
+	return result
+
+# # evaluate a specific number of members in an ensemble
+def evaluate_ensemble(testX, nh3=False):
+	members = get_members(nh3=nh3)
+	weights = [1.0/len(members) for _ in range(len(members))]
+	# make prediction
+	yhat = ensemble_predictions(members, weights, testX)
+	return yhat
+
+def get_members(nh3=True):
+	members=[]
+	if nh3:
+		members.append(load_model("model_cnn_3class_nh3_sep_short_valloss_GAS_0.h5"))
+		members.append(load_model("model_cnn_3class_nh3_sep_short_valloss_GAS_1.h5"))
+		members.append(load_model("model_cnn_3class_nh3_sep_short_valloss_GAS_2.h5"))
+		members.append(load_model("model_cnn_3class_nh3_sep_short_valloss_GAS_3.h5"))
+		members.append(load_model("model_cnn_3class_nh3_sep_short_valloss_GAS_4.h5"))
+		members.append(load_model("model_cnn_3class_nh3_sep_short_valloss_GAS.h5"))
+		#members.append(load_model("model_cnn_3class_nh3_sep_short_valacc_GAS.h5"))
+	else:
+		members.append(load_model("model_cnn_3class0_gauss_3000_2conv_GAS.h5"))
+		members.append(load_model("model_cnn_3class1_gauss_3000_2conv_GAS.h5"))
+		members.append(load_model("model_cnn_3class2_gauss_3000_2conv_GAS.h5"))
+		members.append(load_model("model_cnn_3class3_gauss_3000_2conv_GAS.h5"))
+		members.append(load_model("model_cnn_3class4_gauss_3000_2conv_GAS.h5"))
+		members.append(load_model("model_cnn_3class5_gauss_3000_2conv_GAS.h5"))
+	return members
+
+
 def test_data(f='CygX_N_13CO_conv_test_smooth_clip.fits', c=1, plot=False, compare=False):
 	cube_km = SpectralCube.read('random_cube_NH3_11_0.fits')
 	xax = cube_km.with_spectral_unit(u.km / u.s, velocity_convention='radio').spectral_axis.value
@@ -350,11 +390,12 @@ def test_data(f='CygX_N_13CO_conv_test_smooth_clip.fits', c=1, plot=False, compa
 	print "Loaded model from disk"
 
 	# load model
-	model = load_model("model_cnn_3class_nh3_sep_short_valacc_GAS.h5")
-	print "Loaded model from disk"
+	#model = load_model("model_cnn_3class_nh3_sep_short_valacc_GAS.h5")
+	#print "Loaded model from disk"
 	
 	# Make prediction on each pixel and output as 2D fits image
-	pred_class = model.predict([X_val_new[:,:,0].reshape(X_val_new.shape[0], X_val_new.shape[1], 1), X_val_new[:,:,1].reshape(X_val_new.shape[0], X_val_new.shape[1], 1)], verbose=0)
+	#pred_class = model.predict([X_val_new[:,:,0].reshape(X_val_new.shape[0], X_val_new.shape[1], 1), X_val_new[:,:,1].reshape(X_val_new.shape[0], X_val_new.shape[1], 1)], verbose=0)
+	pred_class = evaluate_ensemble([X_val_new[:,:,0].reshape(X_val_new.shape[0], X_val_new.shape[1], 1), X_val_new[:,:,1].reshape(X_val_new.shape[0], X_val_new.shape[1], 1)], nh3=True)
 	
 	# Make prediction on each pixel and output as 2D fits image
 	predictions = new_model.predict([X_val_new[:,:,0].reshape(X_val_new.shape[0], X_val_new.shape[1], 1), X_val_new[:,:,1].reshape(X_val_new.shape[0], X_val_new.shape[1], 1)], verbose=0)
@@ -372,7 +413,7 @@ def test_data(f='CygX_N_13CO_conv_test_smooth_clip.fits', c=1, plot=False, compa
 		if ind==2:
 			out_arr[j[0], j[1]] = (max(cubeax)-min(cubeax))*(i[0]-abs(-1))/(1--1) + max(cubeax) 
 			out_arr2[j[0],j[1]] = (max(cubeax)-min(cubeax))*(i[1]-abs(-1))/(1--1) + max(cubeax)
-			out_arr3[j[0], j[1]] = (i[2]/step)*step_real
+			out_arr3[j[0], j[1]] = (i[2]/step)*step_real 
 			out_arr4[j[0],j[1]] = (i[3]/step)*step_real
 			out_arr5[j[0], j[1]] = i[4]*Tmax[counter]
 			out_arr6[j[0], j[1]] = i[5]*Tmax[counter]
@@ -469,4 +510,3 @@ def get_guess(vpeak, xaxis, spec, err):
 #train_model()
 
 #test_model()
-
