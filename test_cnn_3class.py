@@ -12,6 +12,9 @@ import itertools
 import numpy as np
 import time
 from sklearn.metrics import accuracy_score
+from spectral_cube import SpectralCube
+import astropy.units as u
+from astropy.table import Table
 
 # Order of class names in training set
 class_names = ['one', 'noise', 'two']
@@ -120,7 +123,7 @@ def test_CNN():
 			lengths.append(len(y_val_new2[bin_ids==i]))
 		center = (bins[:-1] + bins[1:]) / 2
 		center = numpy.concatenate((center, [max(bins+0.2)]))
-		if type_name!='CNN Local+Global':
+		if type_name!='CNN Local+Global Ensemble':
 			plt.plot(center, scores, label=type_name, marker='o')
 		else:
 			sc = plt.scatter(center, scores, c=lengths, cmap=plt.cm.get_cmap('RdYlBu'), label=type_name, edgecolors='black', zorder=20)
@@ -128,8 +131,9 @@ def test_CNN():
 			cbar.set_label('Number of Samples', rotation=270, labelpad=10)
 
 	model, X_v = grab_model(type_name='branch', X_val_new=X_val_new)
-	predictions = np.argmax(model.predict(X_v), axis=1)
-	plt_preds(predictions=predictions, type_name='CNN Local+Global')
+	#predictions = np.argmax(model.predict(X_v), axis=1)
+        predictions = evaluate_ensemble(X_v, nh3=False)
+	plt_preds(predictions=predictions, type_name='CNN Local+Global Ensemble')
 	x2l = numpy.load('chi_predictions_3class_local_test_bic_snr4.npy')
 	plt_preds(predictions=x2l,type_name='Chi Local')
 	x2g = numpy.load('chi_predictions_3class_global_test_bic_snr4.npy')
@@ -139,7 +143,48 @@ def test_CNN():
 	plt.title('Two-Comp Predictions')
 	plt.legend()
 	fig.savefig('CNN_acc_vlsr.pdf', bbox_inches='tight')
-	plt.show()
+	#plt.show()
+
+def view_misclass():
+	cube_km = SpectralCube.read('random_cube_NH3_11_0.fits')
+    	xarr11 = cube_km.with_spectral_unit(u.km / u.s, velocity_convention='radio').spectral_axis.value[250:-250]
+
+    	xarr11 = numpy.flip(xarr11, axis=0) #flip so negative VLSR on left
+
+	def plot_classes(true_comp=2):
+		if true_comp==2:
+			pred_comp=0
+		else:
+			pred_comp=2
+		X_val_new, y_val_new = get_train_multi(type_name='test')
+		specs = X_val_new[:,:,0]
+		glob = X_val_new[:,:,1]
+		model, X_v = grab_model(type_name='branch', X_val_new=X_val_new)
+		#predictions = np.argmax(model.predict(X_v), axis=1)
+                predictions = evaluate_ensemble(X_v, nh3=False)
+		# Grab all true two-comps predicted to be one-comps
+		specs2 = specs[(np.argmax(y_val_new, axis=1)==true_comp) & (predictions==pred_comp)]
+		glob2 = glob[(np.argmax(y_val_new, axis=1)==true_comp) & (predictions==pred_comp)]
+		# Voff1, Voff2, Width1, Width2, Temp1, Temp2, logN1, logN2
+		#meta = get_meta(type_name='test')
+		#print meta[:,2]
+		#print meta[:,3]
+		# Need to switch for text since I weirdly defined one-comp to be zero 
+		if true_comp==2:
+			txt_pred=1
+			txt_true=2
+		else:
+			txt_true=1
+			txt_pred=2
+		for i, j in zip(specs2, glob2):
+			plt.title('True Class: '+ str(true_comp) + ',  Pred Comp: ' + str(txt_pred), size=14)
+			plt.plot(xarr11, i, label='local')
+			plt.plot(xarr11, j+1, label='global')
+			plt.xlabel('Synthetic $V_{LSR}$ [km s$^{-1}$]', size=14)
+			plt.ylabel('Normalized Intensity', size=14)
+			plt.legend(fontsize=14)
+			plt.show()
+	plot_classes(true_comp=2)
 
 def test_CNN_snr():
 	X_val_new, y_val_new = get_train_multi(type_name='test')
@@ -170,7 +215,7 @@ def test_CNN_snr():
 		print lengths
 		center = (bins[:-1] + bins[1:]) / 2
 		center = numpy.concatenate((center, [max(bins+2)]))
-		if type_name!='CNN Local+Global':
+		if type_name!='CNN Local+Global Ensemble':
 			plt.plot(center, scores, label=type_name, marker='o')
 		else:
 			sc = plt.scatter(center, scores, c=lengths, cmap=plt.cm.get_cmap('RdYlBu'), label=type_name, edgecolors='black', zorder=20)
@@ -178,8 +223,9 @@ def test_CNN_snr():
 			cbar.set_label('Number of Samples', rotation=270, labelpad=10)
 
 	model, X_v = grab_model(type_name='branch', X_val_new=X_val_new)
-	predictions = np.argmax(model.predict(X_v), axis=1)
-	plt_preds(predictions=predictions, type_name='CNN Local+Global')
+	#predictions = np.argmax(model.predict(X_v), axis=1)
+        predictions = evaluate_ensemble(X_v, nh3=False)
+	plt_preds(predictions=predictions, type_name='CNN Local+Global Ensemble')
 	x2l = numpy.load('chi_predictions_3class_local_test_bic_snr4.npy')
 	plt_preds(predictions=x2l,type_name='Chi Local')
 	x2g = numpy.load('chi_predictions_3class_global_test_bic_snr4.npy')
@@ -189,7 +235,7 @@ def test_CNN_snr():
 	plt.title('Two-Comp Predictions')
 	plt.legend()
 	fig.savefig('CNN_acc_snr.pdf', bbox_inches='tight')
-	plt.show()
+	#plt.show()
 
 def test_GAS():
 	X_val_new, y_val_new = get_train_multi_nh3(type_name='test')
@@ -282,8 +328,47 @@ def ensembleModels(testX):
 	# sum across ensembles
 	summed = numpy.sum(yhats, axis=0)
 	# argmax across classes
-	#outcomes = numpy.argmax(summed, axis=1)
-    	return summed
+	outcomes = numpy.argmax(summed, axis=1)
+    	return outcomes
+
+# make an ensemble prediction for multi-class classification
+def ensemble_predictions(members, weights, testX):
+	# make predictions
+	yhats = [model.predict(testX) for model in members]
+	yhats = numpy.array(yhats)
+	# weighted sum across ensemble members
+	#summed = numpy.tensordot(yhats, weights, axes=((0),(0)))
+        summed = numpy.sum(yhats, axis=0)
+	# argmax across classes
+	result = numpy.argmax(summed, axis=1)
+	return result
+
+# # evaluate a specific number of members in an ensemble
+def evaluate_ensemble(testX, nh3=False):
+	members = get_members(nh3=nh3)
+	weights = [1.0/len(members) for _ in range(len(members))]
+	# make prediction
+	yhat = ensemble_predictions(members, weights, testX)
+	return yhat
+
+def get_members(nh3=True):
+	members=[]
+	if nh3:
+		members.append(load_model("model_cnn_3class_nh3_sep_short_valloss_GAS_0.h5"))
+		members.append(load_model("model_cnn_3class_nh3_sep_short_valloss_GAS_1.h5"))
+		members.append(load_model("model_cnn_3class_nh3_sep_short_valloss_GAS_2.h5"))
+		members.append(load_model("model_cnn_3class_nh3_sep_short_valloss_GAS_3.h5"))
+		members.append(load_model("model_cnn_3class_nh3_sep_short_valloss_GAS_4.h5"))
+		members.append(load_model("model_cnn_3class_nh3_sep_short_valloss_GAS.h5"))
+		#members.append(load_model("model_cnn_3class_nh3_sep_short_valacc_GAS.h5"))
+	else:
+		members.append(load_model("model_cnn_3class0_gauss_3000_2conv_GAS.h5"))
+		members.append(load_model("model_cnn_3class1_gauss_3000_2conv_GAS.h5"))
+		members.append(load_model("model_cnn_3class2_gauss_3000_2conv_GAS.h5"))
+		members.append(load_model("model_cnn_3class3_gauss_3000_2conv_GAS.h5"))
+		members.append(load_model("model_cnn_3class4_gauss_3000_2conv_GAS.h5"))
+		members.append(load_model("model_cnn_3class5_gauss_3000_2conv_GAS.h5"))
+	return members
 
 def get_low_snr(X_val, local=True, snr_cut=4, less_than=True):
 	if local:
@@ -349,26 +434,26 @@ def get_cm_err():
 	print X_val_new.shape
 
 	# Now predict for low snrs (local)
-	low_snrs = get_low_snr(X_val_new)
-	print len(low_snrs[0])
-	model2, X_v2 = grab_model(type_name='branch', X_val_new=X_val_new[low_snrs])
-	predictions = np.argmax(model.predict(X_v2), axis=1)
-	save_cm(y_val_new[low_snrs], predictions, save_name='low_snr', class_names=class_names)
+	#low_snrs = get_low_snr(X_val_new)
+	#print len(low_snrs[0])
+	#model2, X_v2 = grab_model(type_name='branch', X_val_new=X_val_new[low_snrs])
+	#predictions = np.argmax(model.predict(X_v2), axis=1)
+	#save_cm(y_val_new[low_snrs], predictions, save_name='low_snr', class_names=class_names)
 
-	save_cm(y_val_new[low_snrs], loc_preds[low_snrs], save_name='chi_local_low_snr', class_names=class_names)
+	#save_cm(y_val_new[low_snrs], loc_preds[low_snrs], save_name='chi_local_low_snr', class_names=class_names)
 
-	save_cm(y_val_new[low_snrs], glob_preds[low_snrs], save_name='chi_global_low_snr', class_names=class_names)
+	#save_cm(y_val_new[low_snrs], glob_preds[low_snrs], save_name='chi_global_low_snr', class_names=class_names)
 
 	# Now predict for low snrs (global)
-	low_snrs = get_low_snr(X_val_new, local=True, snr_cut=5.0, less_than=False)
-	print len(low_snrs[0])
-	model2, X_v2 = grab_model(type_name='branch', X_val_new=X_val_new[low_snrs])
-	predictions = np.argmax(model.predict(X_v2), axis=1)
-	save_cm(y_val_new[low_snrs], predictions, save_name='low_snr2', class_names=class_names)
+	#low_snrs = get_low_snr(X_val_new, local=True, snr_cut=5.0, less_than=False)
+	#print len(low_snrs[0])
+	#model2, X_v2 = grab_model(type_name='branch', X_val_new=X_val_new[low_snrs])
+	#predictions = np.argmax(model.predict(X_v2), axis=1)
+	#save_cm(y_val_new[low_snrs], predictions, save_name='low_snr2', class_names=class_names)
 
-	save_cm(y_val_new[low_snrs], loc_preds[low_snrs], save_name='chi_local_low_snr2', class_names=class_names)
+	#save_cm(y_val_new[low_snrs], loc_preds[low_snrs], save_name='chi_local_low_snr2', class_names=class_names)
 
-	save_cm(y_val_new[low_snrs], glob_preds[low_snrs], save_name='chi_global_low_snr2', class_names=class_names)
+	#save_cm(y_val_new[low_snrs], glob_preds[low_snrs], save_name='chi_global_low_snr2', class_names=class_names)
 
 	single = X_val_new[0:100000]
 	noise = X_val_new[100000:200000]
@@ -381,6 +466,7 @@ def get_cm_err():
 	mats = []
 	mats_loc = []
 	mats_glob = []
+	mats_ensemble = []
 	cnn_loc = []
 	cnn_glob = []
 	for i in range(10):
@@ -403,6 +489,11 @@ def get_cm_err():
 		print cnf_matrix
 		cnn_glob.append(cnf_matrix)
 
+		predictions = evaluate_ensemble(X_val, nh3=False)
+		cnf_matrix = confusion_matrix(np.argmax(y_val,axis=1), predictions)
+		print cnf_matrix
+		mats_ensemble.append(cnf_matrix)
+
 		cm_loc = confusion_matrix(np.argmax(y_val,axis=1), numpy.concatenate((loc_s[inds[i]:inds[i+1]], loc_n[inds[i]:inds[i+1]], loc_m[inds[i]:inds[i+1]])))
 		print cm_loc
 		mats_loc.append(cm_loc)
@@ -416,6 +507,13 @@ def get_cm_err():
 	plot_confusion_matrix(meds, classes=class_names,
                       title='CNN Local+Global', stds=stds, use_stds=True)
 	fig.savefig('cm_3class_test10.pdf', bbox_inches='tight')
+
+	meds = numpy.mean(mats_ensemble, axis=0)
+	stds = numpy.std(mats_ensemble, axis=0)
+	fig = plt.figure()
+	plot_confusion_matrix(meds, classes=class_names,
+                      title='CNN Local+Global Ensemble', stds=stds, use_stds=True)
+	fig.savefig('cm_3class_test10_ensemble.pdf', bbox_inches='tight')
 
 	meds = numpy.mean(cnn_loc, axis=0)
 	stds = numpy.std(cnn_loc, axis=0)
@@ -456,37 +554,37 @@ def get_confusion_matrix(type_name='branch'):
 	#x2[x2==2] = 1
 	x2g = numpy.load('chi_predictions_3class_global_test_bic_snr4.npy')
 	x2l = numpy.load('chi_predictions_3class_local_test_bic_snr4.npy')
-	x2l_nh3 = numpy.load('chi_predictions_nh3_local_snr4.npy')
-	x2g_nh3 = numpy.load('chi_predictions_nh3_global_snr4.npy')
+	x2l_nh3 = numpy.load('chi_predictions_nh3_local_snr4_large.npy')
+	x2g_nh3 = numpy.load('chi_predictions_nh3_global_snr4_large.npy')
 	#x2l_nh3 = ftest_thresh(x2l_nh3, threshold=3)
 	#x2g_nh3 = ftest_thresh(x2g_nh3, threshold=3)
 	#x2g[x2g==2] = 1
 	#class_names = ['signal', 'noise']
 	class_names = ['one', 'noise', 'two']
 	X_test, y_val_new2 = get_train_multi(type_name='test')
-	X_val_new, y_val_new = get_train_multi_nh3(type_name='test_small')
+	X_val_new, y_val_new = get_train_multi_nh3(type_name='test')
 
-	low_snrs = get_low_snr(X_val_new, snr_cut=7)
-	print len(low_snrs[0])
-	model3, X_v2 = grab_model(type_name=type_name, X_val_new=X_val_new[low_snrs])
-	predictions = np.argmax(model3.predict(X_v2), axis=1)
-	cnf_matrix = confusion_matrix(np.argmax(y_val_new[low_snrs],axis=1), predictions)
-	print cnf_matrix
-	fig = plt.figure()
-	plot_confusion_matrix(cnf_matrix, classes=class_names, normalize=True,
-                      title='')
-	fig.savefig('low_snr_nh3_norm_cm_3class.pdf', bbox_inches='tight')
+	#low_snrs = get_low_snr(X_val_new, snr_cut=7)
+	#print len(low_snrs[0])
+	#model3, X_v2 = grab_model(type_name=type_name, X_val_new=X_val_new[low_snrs])
+	#predictions = np.argmax(model3.predict(X_v2), axis=1)
+	#cnf_matrix = confusion_matrix(np.argmax(y_val_new[low_snrs],axis=1), predictions)
+	#print cnf_matrix
+	#fig = plt.figure()
+	#plot_confusion_matrix(cnf_matrix, classes=class_names, normalize=True,
+        #              title='')
+	#fig.savefig('low_snr_nh3_norm_cm_3class.pdf', bbox_inches='tight')
 
-	low_snrs = get_low_snr(X_val_new, snr_cut=7, less_than=False)
-	print len(low_snrs[0])
-	model3, X_v2 = grab_model(type_name=type_name, X_val_new=X_val_new[low_snrs])
-	predictions = np.argmax(model3.predict(X_v2), axis=1)
-	cnf_matrix = confusion_matrix(np.argmax(y_val_new[low_snrs],axis=1), predictions)
-	print cnf_matrix
-	fig = plt.figure()
-	plot_confusion_matrix(cnf_matrix, classes=class_names, normalize=True,
-                      title='')
-	fig.savefig('high_snr_nh3_norm_cm_3class.pdf', bbox_inches='tight')
+	#low_snrs = get_low_snr(X_val_new, snr_cut=7, less_than=False)
+	#print len(low_snrs[0])
+	#model3, X_v2 = grab_model(type_name=type_name, X_val_new=X_val_new[low_snrs])
+	#predictions = np.argmax(model3.predict(X_v2), axis=1)
+	#cnf_matrix = confusion_matrix(np.argmax(y_val_new[low_snrs],axis=1), predictions)
+	#print cnf_matrix
+	#fig = plt.figure()
+	#plot_confusion_matrix(cnf_matrix, classes=class_names, normalize=True,
+        #              title='')
+	#fig.savefig('high_snr_nh3_norm_cm_3class.pdf', bbox_inches='tight')
 
 	model, X_val_new = grab_model(type_name=type_name, X_val_new=X_val_new)
 	model2, X_val_new2 = grab_model(type_name='branch', X_val_new=X_test)
@@ -502,9 +600,15 @@ def get_confusion_matrix(type_name='branch'):
 	predictions4 = np.argmax(model4.predict(X_val_new4), axis=1)
 	scores4 = accuracy_score(np.argmax(y_val_new2,axis=1), predictions4)
 
+	predictions5 = evaluate_ensemble(X_val_new, nh3=True)
+	scores5 = accuracy_score(np.argmax(y_val_new,axis=1), predictions5)
+
 	# Compute confusion matrix
 	print 'CNN NH3:'
 	save_cm(y_val_new, predictions, save_name='nh3', class_names=class_names, ttl='CNN NH$_3$')
+
+	print 'CNN NH3 Ensemble:'
+	save_cm(y_val_new, predictions5, save_name='nh3_ensemble', class_names=class_names, ttl='CNN NH$_3$ Ensemble')
 
 	print 'Chi-global NH3:'
 	save_cm(y_val_new, x2g_nh3, save_name='chi_nh3_global', class_names=class_names, ttl='Chi-global NH3')
@@ -573,19 +677,24 @@ def test_data(f='CygX_N_13CO_conv_test_smooth_clip.fits', type_name='branch'):
 
 	# load model
 	new_model, X_val_new = grab_model(type_name, X_val_new)
+
+	if type_name=='nh3':
+		predictions = evaluate_ensemble(X_val_new, nh3=True)
+	else:
+		predictions = evaluate_ensemble(X_val_new, nh3=False)
 	
 	print "Loaded model from disk"
 	
 	# Make prediction on each pixel and output as 2D fits image
-	predictions = new_model.predict(X_val_new, verbose=0)
+	#predictions = new_model.predict(X_val_new, verbose=0)
 	#print predictions.shape
 	#predictions = ensembleModels(X_val_new)
 	#print predictions.shape
 	# Reshape to get back 2D structure
 	for i,j in zip(predictions,indices):
-		ind = numpy.argmax(i)
-		out_arr[j[0], j[1]] = ind
-		out_arr2[j[0],j[1]] = -np.log10(i[ind])
+		#ind = numpy.argmax(i)
+		out_arr[j[0], j[1]] = i
+		#out_arr2[j[0],j[1]] = -np.log10(i[ind])
 	# Format 3D header for 2D data
 	del header['NAXIS3']
 	#del header['LBOUND3']
@@ -598,13 +707,50 @@ def test_data(f='CygX_N_13CO_conv_test_smooth_clip.fits', type_name='branch'):
 	del header['CRVAL3']
 	# Write to fits file
 	fits.writeto(f.split('.fits')[0]+'_pred_cnn_3class_'+type_name+'.fits', data=out_arr, header=header, overwrite=True)
-	fits.writeto(f.split('.fits')[0]+'_pred_cnn_3class_err'+type_name+'.fits', data=out_arr2, header=header, overwrite=True)
+	#fits.writeto(f.split('.fits')[0]+'_pred_cnn_3class_err'+type_name+'.fits', data=out_arr2, header=header, overwrite=True)
 	print "\n %f s for computation." % (time.time() - tic)
 
-#get_confusion_matrix(type_name='branch')
-#get_confusion_matrix(type_name='local')
-#get_confusion_matrix(type_name='global')
-#get_confusion_matrix(type_name='mergedspec')
+def make_GAS_compare(type_name='test_no_sep'):
+	cube_km = SpectralCube.read('random_cube_NH3_11_0.fits')
+    	xarr11 = cube_km.with_spectral_unit(u.km / u.s, velocity_convention='radio').spectral_axis.value
+	step = abs(xarr11[22]-xarr11[23])
+	#eTEX1_FIT TEX2_FIT TAU2_FIT LOGN1 RMS LOGN2 NCOMP SIG1 SIG2 eSIG2_FIT VLSR1_FIT eSIG1_FIT TMAX-2 TMAX-1 eTAU1_FIT eTAU2_FIT eTEX2_FIT SIG2_FIT LN_K_21 VLSR2 VLSR1 eVLSR2_FIT VLSR2_FIT TKIN2 TKIN1 TEX1_FIT TAU1_FIT SIG1_FIT NCOMP_FIT eVLSR1_FIT RMS_FIT TMAX
+	X_val_new, y_val_new = get_train_multi_nh3(type_name=type_name)
+	specs = X_val_new[:,:,0][np.argmax(y_val_new, axis=1)!=1]
+	# Voff1, Voff2, Width1, Width2, Temp1, Temp2, logN1, logN2
+	meta = get_nh3_meta(type_name=type_name)
+	#print meta[:,2]
+	#print meta[:,3]
+	model, X_v = grab_model(type_name='nh3', X_val_new=X_val_new)
+	#predictions = np.argmax(model.predict(X_v), axis=1)
+        predictions = evaluate_ensemble(X_v, nh3=True)
+
+	predictions = predictions[np.argmax(y_val_new, axis=1)!=1] #remove noise
+	predictions = numpy.where(predictions==0, 1, predictions) # switch labels
+	meta = meta[np.argmax(y_val_new, axis=1)!=1] #remove noise
+
+	new_model = load_model("model_cnn_reg_nh3_1000_2conv.h5")
+	params = new_model.predict(X_v) # Voff1, Voff2, Width1, Width2, Temp1, Temp2
+	params = params[np.argmax(y_val_new, axis=1)!=1]
+
+	y_val_new = y_val_new[np.argmax(y_val_new, axis=1)!=1] #remove noise
+	yout = np.argmax(y_val_new, axis=1)
+	yout = numpy.where(yout==0, 1, yout) # switch labels
+
+	na=numpy.zeros(len(predictions))
+	na[:] = numpy.nan
+	rms = numpy.std(numpy.column_stack((specs[:,0:50], specs[:,-50:])), axis=1)
+	Tmax = numpy.ones(len(predictions))
+	out = numpy.column_stack([na, na, na, na, rms, na, yout, meta[:,2], meta[:,3], na, params[:,0], na, meta[:,5], meta[:,4], na,na, na, params[:,3]*step, na, meta[:,1], meta[:,0], na, params[:,1], na, na, na, na, params[:,2]*step, predictions, na, na, Tmax])
+	print numpy.shape(out)
+	t = Table(out, names=('eTEX1_FIT', 'TEX2_FIT', 'TAU2_FIT', 'LOGN1', 'RMS', 'LOGN2', 'NCOMP', 'SIG1', 'SIG2', 'eSIG2_FIT', 'VLSR1_FIT', 'eSIG1_FIT', 'TMAX-2', 'TMAX-1', 'eTAU1_FIT', 'eTAU2_FIT', 'eTEX2_FIT', 'SIG2_FIT', 'LN_K_21', 'VLSR2', 'VLSR1', 'eVLSR2_FIT', 'VLSR2_FIT', 'TKIN2', 'TKIN1', 'TEX1_FIT', 'TAU1_FIT', 'SIG1_FIT', 'NCOMP_FIT', 'eVLSR1_FIT', 'RMS_FIT', 'TMAX'))
+	if type_name=='test_no_sep':
+		tx='_no_sep'
+	else:
+		tx='_sep'
+	t.write('example_result' + tx +'_ensemble.csv', format='csv')
+	#numpy.savetxt('example_result.txt', out, header='eTEX1_FIT TEX2_FIT TAU2_FIT LOGN1 RMS LOGN2 NCOMP SIG1 SIG2 eSIG2_FIT VLSR1_FIT eSIG1_FIT TMAX-2 TMAX-1 eTAU1_FIT eTAU2_FIT eTEX2_FIT SIG2_FIT LN_K_21 VLSR2 VLSR1 eVLSR2_FIT VLSR2_FIT TKIN2 TKIN1 TEX1_FIT TAU1_FIT SIG1_FIT NCOMP_FIT eVLSR1_FIT RMS_FIT TMAX')
+	
 #get_confusion_matrix(type_name='nh3')
 
 #get_cm_err()
@@ -612,6 +758,11 @@ def test_data(f='CygX_N_13CO_conv_test_smooth_clip.fits', type_name='branch'):
 #test_CNN_snr()
 #test_CNN()
 #test_GAS()
+
+#view_misclass()
+
+#make_GAS_compare(type_name='test')
+#make_GAS_compare(type_name='test_no_sep')
 
 #test_data(f='B18_HC5N_conv_test_smooth_clip.fits', type_name='branch')
 #test_data(f='CygX_N_C18O_conv_test_smooth_clip2.fits', type_name='branch')
