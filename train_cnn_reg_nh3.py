@@ -409,6 +409,7 @@ def test_data(f='CygX_N_13CO_conv_test_smooth_clip.fits', c=1, plot=False, compa
 	step = abs(xax[23]-xax[24])
 	counter=0
 	for i,j,k in zip(predictions,indices, pred_class):
+		ind = int(k)
 		#ind = numpy.argmax(k)
 		if ind==2:
 			out_arr[j[0], j[1]] = (max(cubeax)-min(cubeax))*(i[0]-abs(-1))/(1--1) + max(cubeax) 
