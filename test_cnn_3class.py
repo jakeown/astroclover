@@ -95,7 +95,7 @@ def grab_model(type_name, X_val_new):
 		X_val_new = numpy.concatenate([X_val_new[:,:,0], X_val_new[:,:,1]], axis=1).reshape(X_val_new.shape[0], X_val_new.shape[1]*2, 1)
 	elif type_name=='nh3':
 		# branch model
-		model = load_model("model_cnn_3class_nh3_sep_short_valacc_GAS.h5")
+		model = load_model("model_cnn_3class_nh3_sep_short_valloss_GAS.h5")
 		X_val_new = [X_val_new[:,:,0].reshape(X_val_new.shape[0], X_val_new.shape[1], 1), X_val_new[:,:,1].reshape(X_val_new.shape[0], X_val_new.shape[1], 1)]
 	return model, X_val_new
 
