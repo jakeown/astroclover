@@ -1,4 +1,4 @@
-from test_cnn_3class import test_data as predict_class
+#from test_cnn_3class import test_data as predict_class
 from train_cnn_tpeak import test_data as predict_gauss_reg
 from train_cnn_reg_nh3 import test_data as predict_nh3_reg
 from spectral_cube import SpectralCube
@@ -7,7 +7,7 @@ import numpy
 def check_spec(f, length):
 	cube = SpectralCube.read(f)
 	spec_length = len(cube.spectral_axis)	
-	print cube.shape
+	#print cube.shape
 	out = numpy.zeros((length, cube.shape[1], cube.shape[2]))
 	out[:] = numpy.nan
 	if spec_length<length:
@@ -42,11 +42,12 @@ def predict(f='Oph2_13CO_conv_test_smooth_clip.fits', nh3=False):
 		f = check_spec(f, length=500)
 	
 	# Segment cube into one-comp, two-comp, and noise
-	print 'Predicting Class of Each Pixel...'
-	predict_class(f=f, type_name=type_name)
+	#print 'Predicting Class of Each Pixel...'
+	#predict_class(f=f, type_name=type_name)
 
-	# Predict kinematics of two-comp pixels
-	print 'Predicting Kinematics of Two-Component Pixels...'
+	# Segment cube into one-comp, two-comp, and noise
+	# and predict kinematics of two-comp pixels
+	print 'Segmenting and Predicting Kinematics...'
 	if nh3:
 		predict_nh3_reg(f=f)
 	else:

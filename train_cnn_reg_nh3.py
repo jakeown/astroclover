@@ -31,7 +31,7 @@ import tensorflow as tf
 import os
 import sys
 import h5py
-import struct
+import time
 #from train_cnn_tpeak import aic
 
 ckms=2.99792458*10**5
@@ -341,12 +341,13 @@ def get_members(nh3=True):
 
 
 def test_data(f='CygX_N_13CO_conv_test_smooth_clip.fits', c=1, plot=False, compare=False):
+	tic = time.time()
 	cube_km = SpectralCube.read('random_cube_NH3_11_0.fits')
 	xax = cube_km.with_spectral_unit(u.km / u.s, velocity_convention='radio').spectral_axis.value
 
 	data = fits.getdata(f)
 	header = fits.getheader(f)
-	print data.shape
+	#print data.shape
 	# Create a 2D array to place ouput predictions
 	out_arr = data[0].copy()
 	out_arr[:]=numpy.nan
@@ -355,6 +356,7 @@ def test_data(f='CygX_N_13CO_conv_test_smooth_clip.fits', c=1, plot=False, compa
 	out_arr4 = out_arr.copy()
 	out_arr5 = out_arr.copy()
 	out_arr6 = out_arr.copy()
+	out_class = out_arr.copy()
 	
 	window_shape = [data.shape[0],3,3]
 	X_val_new = []
@@ -379,7 +381,7 @@ def test_data(f='CygX_N_13CO_conv_test_smooth_clip.fits', c=1, plot=False, compa
 	X_val_new = numpy.array(X_val_new)
 	indices = numpy.array(indices)
 
-	print X_val_new.shape
+	#print X_val_new.shape
 
 	#count = 0
 	#for i in X_val_new:
@@ -410,6 +412,7 @@ def test_data(f='CygX_N_13CO_conv_test_smooth_clip.fits', c=1, plot=False, compa
 	counter=0
 	for i,j,k in zip(predictions,indices, pred_class):
 		ind = int(k)
+		out_class[j[0], j[1]] = ind
 		#ind = numpy.argmax(k)
 		if ind==2:
 			out_arr[j[0], j[1]] = (max(cubeax)-min(cubeax))*(i[0]-abs(-1))/(1--1) + max(cubeax) 
@@ -430,12 +433,16 @@ def test_data(f='CygX_N_13CO_conv_test_smooth_clip.fits', c=1, plot=False, compa
 	del header['CTYPE3']
 	del header['CRVAL3']
 	# Write to fits file
+	fits.writeto(f.split('.fits')[0]+'_pred_cnn_class.fits', data=out_class, header=header, overwrite=True)
 	fits.writeto(f.split('.fits')[0]+'_pred_cnn_vlsr1.fits', data=out_arr, header=header, overwrite=True)
 	fits.writeto(f.split('.fits')[0]+'_pred_cnn_vlsr2.fits', data=out_arr2, header=header, overwrite=True)
 	fits.writeto(f.split('.fits')[0]+'_pred_cnn_sig1.fits', data=out_arr3, header=header, overwrite=True)
 	fits.writeto(f.split('.fits')[0]+'_pred_cnn_sig2.fits', data=out_arr4, header=header, overwrite=True)
 	fits.writeto(f.split('.fits')[0]+'_pred_cnn_tpeak1.fits', data=out_arr5, header=header, overwrite=True)
 	fits.writeto(f.split('.fits')[0]+'_pred_cnn_tpeak2.fits', data=out_arr6, header=header, overwrite=True)
+
+	print "\n %f s for computation." % (time.time() - tic)
+
 	if compare:
 		for i,j,k in zip(X_val_new, predictions, pred_class):
 			ind = numpy.argmax(k)
