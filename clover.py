@@ -24,13 +24,15 @@ def check_spec(f, length):
 		cube.header['NAXIS3'] = length
 		# Move CRPIX3 over by the number of channels
 		# added to left of spectrum
-		cube.header['CRPIX3'] = cube.header['CRPIX3']+int(len(noise)/2)	
+		cube.header['CRPIX3'] = cube.header['CRPIX3']+int(len(noise)/2)
+		cube = SpectralCube(data=out, wcs=cube.wcs)
+		f = f.split('.fits')[0]+'_clover.fits'
+		cube.write(f, overwrite=True)	
 	elif spec_length>length:
 		to_remove = spec_length-length
-		cube = cube[int(to_remove/2.):-int(round(to_remove/2.))]
-	cube = SpectralCube(data=out, wcs=cube.wcs)
-	f = f.split('.fits')[0]+'_clover.fits'
-	cube.write(f, overwrite=True)	
+		cube = cube[int(to_remove/2.):-int(round(to_remove/2.)), :, :]
+		f = f.split('.fits')[0]+'_clover.fits'
+		cube.write(f, overwrite=True)
 	return f
 
 def predict(f='Oph2_13CO_conv_test_smooth_clip.fits', nh3=False):

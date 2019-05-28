@@ -365,7 +365,7 @@ def test_data(f='CygX_N_13CO_conv_test_smooth_clip.fits', c=1, plot=False, compa
 	Tmax = []
 	for index, x in numpy.ndenumerate(data[0]):
 		z = data[:, index[0]-1:index[0]+2, index[1]-1:index[1]+2]
-		if z.shape==(1000, 3,3):
+		if z.shape==(1000, 3,3) and (numpy.isnan(z.flatten()).sum()==0):
 			indices.append(index)
 			local0 = z[:,1,1].reshape(1000,1) # central pixel
 			Tmax.append(numpy.max(local0))
@@ -380,6 +380,8 @@ def test_data(f='CygX_N_13CO_conv_test_smooth_clip.fits', c=1, plot=False, compa
 			X_val_new.append(z)
 	X_val_new = numpy.array(X_val_new)
 	indices = numpy.array(indices)
+
+	print 'Number of pixels to predict:' + str(len(indices))
 
 	#print X_val_new.shape
 
