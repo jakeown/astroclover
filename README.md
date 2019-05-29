@@ -17,7 +17,7 @@ CLOVER has two prediction steps:
 
 Usage:
 
-First, run the download_models.py script.  This will download the trained ConvNets from a remote directory.  This will take some time since the 14 files are ~ 9 GB in total.
+First, run the `download_models.py` script.  This will download the trained ConvNets from a remote directory.  This will take some time since the 14 files are ~ 9 GB in total.
 
 The easiest way to install all the required packages is to install [anaconda](https://www.anaconda.com/distribution/) and create a new virtual environment. Anaconda version 4.6.11 or later is recommended.  Once anaconda is installed, you can run the following commands to setup a new environment and install the remaining packages required for CLOVER:
 
@@ -27,7 +27,7 @@ conda activate clover_env
 pip install tensorflow==1.8.0 keras==2.2.0 pprocess spectral_cube
 ```
 
-To run CLOVER on your data cube, simply use the `predict(f=your_cube_name.fits)` function in the clover.py script. If your cube is NH3 (1,1), add `nh3=True` in the call to `predict()` (e.g., `predict(f=your_nh3_cube.fits, nh3=False)`).
+To run CLOVER on your data cube, simply use the `predict(f=your_cube_name.fits)` function in the `clover.py` script. If your cube is NH3 (1,1), add `nh3=True` in the call to `predict()` (e.g., `predict(f=your_nh3_cube.fits, nh3=False)`).
 
 CLOVER's predictions require 500 spectral channels for Gaussian emission lines and 1000 channels for NH3 (1,1).  If the cube you input into the predict function is smaller those sizes, CLOVER will add random noise channels to each end of the spectral axis up to the required size.  If the input cube is smaller than the required input size, CLOVER will clip channels from each end of the spectral axis until the required size is obtained.
 
