@@ -17,8 +17,20 @@ CLOVER has two prediction steps:
 
 Usage:
 
-First, run the download_models.py script.  This will download the trained CNNs from a remote directory.
+First, run the download_models.py script.  This will download the trained ConvNets from a remote directory.  This will take some time since the 14 files are ~ 9 GB in total.
 
 To run CLOVER on your data cube, simply use the predict(f=your_cube_name.fits) function in the clover.py script. If your cube is NH3 (1,1), add nh3=True in the call to predict() (e.g., predict(f=your_nh3_cube.fits, nh3=False)).
 
-CLOVER will then output the classification map and parmeter predictions as individual FITS files.
+CLOVER's predictions require 500 spectral channels for Gaussian emission lines and 1000 channels for NH3 (1,1).  If the cube you input into the predict function is smaller those sizes, CLOVER will add random noise channels to each end of the spectral axis up to the required size.  If the input cube is smaller than the required input size, CLOVER will clip channels from each end of the spectral axis until the required size is obtained.
+
+CLOVER will then make predictions and output the classification map and parmeter predictions as individual FITS files.  In total, up to eight files are generated:
+1. input_name + '_clover.fits' - cube after the spectral axis has been corrected (not generated if input cube already has proper spectral length)
+2. input_name + '_class.fits' - predicted class of each pixel
+3. input_name + '_vlsr1.fits' - predicted centroid velocity of component with lowest centroid
+4. input_name + '_vlsr2.fits' - predicted centroid velocity of component with highest centroid
+5. input_name + '_sig1.fits' - predicted velocity dispersion of component with lowest centroid
+6. input_name + '_sig2.fits' - predicted velocity dispersion of component with highest centroid
+7. input_name + '_tpeak1.fits' - predicted peak intensity of component with lowest centroid
+8. input_name + '_tpeak2.fits' - predicted peak intensity of component with highest centroid
+
+The classification step uses an ensemble of six independently trained ConvNets to make the final class prediction.  These six predictions can be done in parallel by specifying the number of desired parallel processes.  For example, to run all six predictions at once, use predict(f=your_cube_name.fits, nproc=6).  

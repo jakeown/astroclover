@@ -149,13 +149,13 @@ def test_data(f='CygX_N_13CO_conv_test_smooth_clip.fits', nh3=False, nproc=2):
 	del header['CTYPE3']
 	del header['CRVAL3']
 	# Write to fits file
-	fits.writeto(f.split('.fits')[0]+'_pred_cnn_class.fits', data=out_class, header=header, overwrite=True)
-	fits.writeto(f.split('.fits')[0]+'_pred_cnn_vlsr1.fits', data=out_arr, header=header, overwrite=True)
-	fits.writeto(f.split('.fits')[0]+'_pred_cnn_vlsr2.fits', data=out_arr2, header=header, overwrite=True)
-	fits.writeto(f.split('.fits')[0]+'_pred_cnn_sig1.fits', data=out_arr3, header=header, overwrite=True)
-	fits.writeto(f.split('.fits')[0]+'_pred_cnn_sig2.fits', data=out_arr4, header=header, overwrite=True)
-	fits.writeto(f.split('.fits')[0]+'_pred_cnn_tpeak1.fits', data=out_arr5, header=header, overwrite=True)
-	fits.writeto(f.split('.fits')[0]+'_pred_cnn_tpeak2.fits', data=out_arr6, header=header, overwrite=True)
+	fits.writeto(f.split('.fits')[0]+'_class.fits', data=out_class, header=header, overwrite=True)
+	fits.writeto(f.split('.fits')[0]+'_vlsr1.fits', data=out_arr, header=header, overwrite=True)
+	fits.writeto(f.split('.fits')[0]+'_vlsr2.fits', data=out_arr2, header=header, overwrite=True)
+	fits.writeto(f.split('.fits')[0]+'_sig1.fits', data=out_arr3, header=header, overwrite=True)
+	fits.writeto(f.split('.fits')[0]+'_sig2.fits', data=out_arr4, header=header, overwrite=True)
+	fits.writeto(f.split('.fits')[0]+'_tpeak1.fits', data=out_arr5, header=header, overwrite=True)
+	fits.writeto(f.split('.fits')[0]+'_tpeak2.fits', data=out_arr6, header=header, overwrite=True)
 
 	print "\n %f s for computation." % (time.time() - tic)
 
