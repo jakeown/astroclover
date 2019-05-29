@@ -367,7 +367,7 @@ def test_data(f='CygX_N_13CO_conv_test_smooth_clip.fits', plot=False, compare=Fa
 
 	# load model
 	new_model = load_model("model_cnn_tpeak_gauss_3000_2conv.h5")
-	print "Loaded model from disk"
+	#print "Loaded model from disk"
 
 	# load model
 	#model = load_model("model_cnn_3class0_gauss_3000_2conv_GAS.h5")
