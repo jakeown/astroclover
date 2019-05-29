@@ -3,31 +3,17 @@ from astropy.io import fits
 import numpy
 from spectral_cube import SpectralCube
 import matplotlib.pyplot as plt
-from keras.models import Sequential
-from keras.layers.core import Dense, Dropout, Activation, Flatten
-from keras.layers.convolutional import Convolution3D, MaxPooling3D, Conv2D, MaxPooling2D, Conv1D, MaxPooling1D
+from keras.layers.core import Dense, Dropout, Flatten, Input
+from keras.layers.convolutional import Conv1D, MaxPooling1D
 import math
-from scipy import *
-from scipy.stats import gaussian_kde
 import astropy.units as u
-from keras.models import load_model
 from keras.losses import categorical_crossentropy
 from keras.optimizers import Adam
 from keras.callbacks import EarlyStopping, ModelCheckpoint
-from keras.datasets import imdb
-from keras.layers import Dense, Input
-from keras.models import Sequential, Model
-from keras.layers.embeddings import Embedding
-from keras.preprocessing import sequence
+from keras.models import Sequential, Model, load_model
 from sklearn.metrics import mean_squared_error, mean_absolute_error
-from keras.layers import (Activation, Conv3D, Dense, Dropout, Flatten,
-                          MaxPooling3D, Concatenate, concatenate)
-from keras.layers.wrappers import TimeDistributed
-from keras.optimizers import SGD, RMSprop
-from keras.utils import np_utils, generic_utils
 from scipy.optimize import curve_fit
-from sklearn import preprocessing
-import tensorflow as tf
+from keras.layers import concatenate
 import os
 import sys
 import h5py
