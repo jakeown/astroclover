@@ -33,7 +33,7 @@ CLOVER's predictions require 500 spectral channels for Gaussian emission lines a
 
 CLOVER will then make predictions and output the classification map and parmeter predictions as individual FITS files.  In total, up to eight files are generated:
 1. input_name + '_clover.fits' - cube after the spectral axis has been corrected (not generated if input cube already has proper spectral length)
-2. input_name + '_class.fits' - predicted class of each pixel
+2. input_name + '_class.fits' - predicted class of each pixel (2=two-component, 1=noise, 0=one-component)
 3. input_name + '_vlsr1.fits' - predicted centroid velocity of component with lowest centroid
 4. input_name + '_vlsr2.fits' - predicted centroid velocity of component with highest centroid
 5. input_name + '_sig1.fits' - predicted velocity dispersion of component with lowest centroid
