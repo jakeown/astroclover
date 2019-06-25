@@ -31,7 +31,7 @@ To run CLOVER on your data cube, simply use the `predict(f=your_cube_name.fits)`
 
 CLOVER's predictions require 500 spectral channels for Gaussian emission lines and 1000 channels for NH3 (1,1).  If the cube you input into the predict function is smaller those sizes, CLOVER will add random noise channels to each end of the spectral axis up to the required size.  If the input cube is smaller than the required input size, CLOVER will clip channels from each end of the spectral axis until the required size is obtained.  
 
-It is recommended that the centroid of the emission lines in your cube be located within the central ~275 channels for Gaussian emission lines and the central ~140 channels for NH3 (1,1).  These bounds are set by the range of possible centroids used to train CLOVER.  If your cube has large centroid velocity gradients, then you may need to split the cube into sub-cubes so that the emission is within the aforementioned bounds.
+It is recommended that the centroids of the emission lines in your cube be located within the central ~275 channels for Gaussian emission lines and the central ~140 channels for NH3 (1,1).  These bounds are set by the range of possible centroids used to train CLOVER.  If your cube has large centroid velocity gradients, then you may need to split the cube into sub-cubes so that the emission is within the aforementioned bounds.
 
 CLOVER will output its classification map and parameter predictions as individual FITS files.  In total, up to eight files are generated:
 1. input_name + '_clover.fits' - cube after the spectral axis has been corrected (not generated if input cube already has proper spectral length)
