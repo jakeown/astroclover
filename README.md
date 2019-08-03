@@ -22,9 +22,9 @@ First, run the `download_models.py` script.  This will download the trained Conv
 The easiest way to install all the required packages is to install [anaconda](https://www.anaconda.com/distribution/) and create a new virtual environment. Anaconda version 4.6.11 or later is recommended.  Once anaconda is installed, you can run the following commands to setup a new environment and install the remaining packages required for CLOVER:
 
 ```
-conda create -n clover_env python=2.7 anaconda
+conda create -n clover_env python=3.6 anaconda
 conda activate clover_env
-pip install tensorflow==1.8.0 keras==2.2.0 pprocess spectral_cube
+pip install tensorflow==1.8.0 keras==2.2.0 spectral_cube
 ```
 
 To run CLOVER on your data cube, simply use the `predict(f=your_cube_name.fits)` function in the `clover.py` script. If your cube is NH3 (1,1), add `nh3=True` in the call to `predict()` (e.g., `predict(f=your_nh3_cube.fits, nh3=True)`).
