@@ -160,23 +160,28 @@ def generate_cubes(nCubes=90, nBorder=1, noise_rms=0.1, fix_vlsr=False,
                 spec11 = spec11a + spec11b
 
                 if (xx == nBorder) and (yy == nBorder):
-                    Tmax11a = np.max(spec11a)
-                    Tmax11b = np.max(spec11b)
+                    Tmax11a = peak1[i]
+                    Tmax11b = peak2[i]
                     Tmax11 = np.max(spec11)
+		    #plt.plot(xarr11, spec11)
+		    #plt.scatter([Voff1[i], Voff2[i]], [T1,T2], color='red', alpha=0.5)
+		    #plt.show()
             if nComps[i]==0:
 	        cube11[:, yy, xx] = np.zeros(500)
 	    else:
 		cube11[:, yy, xx] = spec11
             #cube22[:, yy, xx] = spec22
 	if nComps[i]!=0:
+		Tmax11a /= np.max(cube11)
+		Tmax11b /= np.max(cube11)
 		cube11 /= np.max(cube11)
         cube11 += np.random.randn(*cube11.shape) * mn[i]
         #cube22 += np.random.randn(*cube22.shape) * noise_rms
 	
-	loc11 = cube11[:,1,1].reshape(500,1)
-	loc11 = loc11/np.max(loc11)
-	glob11 = np.mean(cube11.reshape(500,9),axis=1)
-	glob11 = glob11/np.max(glob11)
+	#loc11 = cube11[:,1,1].reshape(500,1)
+	#loc11 = loc11/np.max(loc11)
+	#glob11 = np.mean(cube11.reshape(500,9),axis=1)
+	#glob11 = glob11/np.max(glob11)
 
 	loc11 = cube11[:,1,1].reshape(500,1)
 	T1 = Tmax11a/np.max(loc11)
@@ -204,6 +209,7 @@ def generate_cubes(nCubes=90, nBorder=1, noise_rms=0.1, fix_vlsr=False,
 		plt.plot(xarr11, glob11+1) #, label='3x3 average (global)'
 		plt.errorbar([Voff1[i], Voff2[i]], [0,0.1], xerr=[sigma1[i],sigma2[i]], color='orange', fmt='none')
 		plt.scatter([Voff1[i], Voff2[i]], [T1,T2], color='red', alpha=0.5)
+		plt.scatter([Voff1[i], Voff2[i]], [T1+1,T2+1], color='red', alpha=0.5)
 
 		plt.xlabel('Synthetic $V_{LSR}$', size=14)
 		plt.ylabel('Normalized Intensity', size=14)
@@ -240,8 +246,12 @@ def generate_cubes(nCubes=90, nBorder=1, noise_rms=0.1, fix_vlsr=False,
 #generate_cubes(nCubes=300000, set_name='gauss_train1', regression=False, plot=False)
 #generate_cubes(nCubes=90000, set_name='gauss_val1', regression=False)
 #generate_cubes(nCubes=30000, set_name='gauss_test1', regression=False, plot=False)
-generate_cubes(nCubes=300000, set_name='gauss_test2', regression=False, plot=False)
+#generate_cubes(nCubes=300000, set_name='gauss_test2', regression=False, plot=False)
 
 #generate_cubes(nCubes=300000, set_name='gauss_train1_reg', regression=True, plot=False)
 #generate_cubes(nCubes=90000, set_name='gauss_val1_reg', regression=True)
 #generate_cubes(nCubes=30000, set_name='gauss_test1_reg', regression=True, plot=False)
+
+#generate_cubes(nCubes=300000, set_name='gauss_train2_reg', regression=True, plot=False)
+#generate_cubes(nCubes=90000, set_name='gauss_val2_reg', regression=True)
+#generate_cubes(nCubes=30000, set_name='gauss_test2_reg', regression=True, plot=False)
