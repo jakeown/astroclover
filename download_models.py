@@ -16,7 +16,7 @@ filelist = [
 'model_cnn_3class_nh3_sep_short_valloss_GAS_4.tar.gz',
 'model_cnn_3class_nh3_sep_short_valloss_GAS.tar.gz',
 'model_cnn_reg_nh3_1000_2conv.tar.gz',
-'model_cnn_tpeak_gauss_3000_2conv.tar.gz',
+'model_cnn_tpeak_gauss_3000_2conv_20Aug2019.tar.gz',
 ]
 
 counter=1

@@ -51,7 +51,7 @@ def test_data(f='CygX_N_13CO_conv_test_smooth_clip.fits', nh3=False, nproc=2):
         regmod = "model_cnn_reg_nh3_1000_2conv.h5"
     else:
         speclen = 500
-        regmod = "model_cnn_tpeak_gauss_3000_2conv.h5"
+        regmod = "model_cnn_tpeak_gauss_3000_2conv_20Aug2019.h5"
 
     tic = time.time()
     # c is the class of the test data (0=single, 1=multi)
