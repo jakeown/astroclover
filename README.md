@@ -1,7 +1,7 @@
 # astroclover
 Convnet Line-fitting Of Velocities in Emission-line Regions (CLOVER)
 
-CLOVER is a convolutional neural network (ConvNet) trained to identify spectra with two velocity components along the line of sight and predict their kinematics.  It works with Gaussian emission lines (e.g., CO) and lines with hyperfine structure (e.g., NH3).  This repository holds both the scripts used to train the ConvNet and those used to test the trained ConvNet's performance or predict on real data cubes. 
+CLOVER is a convolutional neural network (ConvNet) trained to identify spectra with two velocity components along the line of sight and predict their kinematics.  It works with Gaussian emission lines (e.g., CO) and lines with hyperfine structure (e.g., NH3).  This repository holds both the scripts used to train the ConvNet and those used to test the trained ConvNet's performance or predict on real data cubes.  More details about CLOVER are included in the following publication: [Keown et al. 2019](https://arxiv.org/abs/1909.08727) 
 
 CLOVER has two prediction steps:
 
@@ -43,4 +43,6 @@ CLOVER will output its classification map and parameter predictions as individua
 7. input_name + '_tpeak1.fits' - predicted peak intensity of component with lowest centroid
 8. input_name + '_tpeak2.fits' - predicted peak intensity of component with highest centroid
 
-The classification step uses an ensemble of six independently trained ConvNets to make the final class prediction.  These six predictions can be done in parallel by specifying the number of desired parallel processes.  For example, to run all six predictions at once, use `predict(f=your_cube_name.fits, nproc=6)`.  
+The classification step uses an ensemble of six independently trained ConvNets to make the final class prediction.  These six predictions can be done in parallel by specifying the number of desired parallel processes.  For example, to run all six predictions at once, use `predict(f=your_cube_name.fits, nproc=6)`. 
+
+Note that CLOVER has been tested on data sets with pixel scales of 8.8-23 arcseconds, angular resolutions of 31-46 arcseconds, and spectral resolutions of 0.07-0.11 km/s. The performance of CLOVER on data sets outside these ranges may be different than those shown in the publication. 
